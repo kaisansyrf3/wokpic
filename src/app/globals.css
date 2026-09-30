@@ -63,6 +63,85 @@
   }
 }
 
+/* Admin area: plain, dense, no animation. */
+@layer components {
+  .admin-input {
+    width: 100%;
+    border: 1px solid var(--color-line);
+    background-color: var(--color-ink-soft);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-chalk);
+  }
+
+  .admin-input::placeholder {
+    color: #6f6a6b;
+  }
+
+  textarea.admin-input {
+    min-height: 7rem;
+    resize: vertical;
+  }
+
+  .admin-input:disabled {
+    opacity: 0.5;
+  }
+
+  .admin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid var(--color-line);
+    padding: 0.5rem 0.9rem;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-chalk);
+    transition: background-color 120ms linear, opacity 120ms linear;
+  }
+
+  .admin-button:hover:not(:disabled) {
+    background-color: #ffffff12;
+  }
+
+  .admin-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .admin-button-primary {
+    border-color: var(--color-chalk);
+    background-color: var(--color-chalk);
+    color: var(--color-ink);
+  }
+
+  .admin-button-primary:hover:not(:disabled) {
+    background-color: #ffffffd9;
+  }
+
+  .admin-button-danger {
+    border-color: #f8717166;
+    color: #fca5a5;
+  }
+
+  .admin-button-danger:hover:not(:disabled) {
+    background-color: #ef44441a;
+  }
+
+  .admin-card {
+    border: 1px solid var(--color-line);
+    background-color: var(--color-ink-soft);
+  }
+
+  .admin-heading {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-ui);
+    color: var(--color-ash);
+  }
+}
+
 /* Lenis */
 html.lenis,
 html.lenis body {
