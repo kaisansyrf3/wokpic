@@ -3,8 +3,10 @@
 import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { baseAngle, computeRingGeometry } from "@/animations/ringLayout";
+import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/ringLayout";
+import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
 import gsap from "@/lib/gsap";
+import { useTransitionStore } from "@/store/transition";
 import type { HeroItem } from "@/types/content";
 
 type RingGalleryProps = {
@@ -12,11 +14,15 @@ type RingGalleryProps = {
 };
 
 type RingGeometry = ReturnType<typeof computeRingGeometry>;
+type GsapContext = ReturnType<typeof gsap.context>;
 
 export function RingGallery({ items }: RingGalleryProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const photoRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const geometryRef = useRef<RingGeometry | null>(null);
-  const rotRef = useRef(0);
+  const proxyRef = useRef<RotationProxy>({ rot: 0 });
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
+  const contextRef = useRef<GsapContext | null>(null);
   const loadedRef = useRef<Set<number>>(new Set());
   const [ready, setReady] = useState(false);
 
@@ -36,6 +42,8 @@ export function RingGallery({ items }: RingGalleryProps) {
       const geometry = geometryRef.current;
       if (!geometry) return;
 
+      proxyRef.current.rot = rot;
+
       photoRefs.current.forEach((element, index) => {
         if (!element) return;
         const angle = baseAngle(index, count) + rot;
@@ -54,18 +62,24 @@ export function RingGallery({ items }: RingGalleryProps) {
 
   const measure = useCallback(() => {
     geometryRef.current = computeRingGeometry(window.innerWidth, window.innerHeight);
-    applyLayout(rotRef.current);
+    applyLayout(proxyRef.current.rot);
   }, [applyLayout]);
 
   useLayoutEffect(() => {
-    measure();
+    const context = gsap.context(() => {}, rootRef);
+    contextRef.current = context;
 
+    measure();
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
 
     return () => {
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
+      tweenRef.current?.kill();
+      tweenRef.current = null;
+      context.revert();
+      contextRef.current = null;
     };
   }, [measure]);
 
@@ -77,8 +91,46 @@ export function RingGallery({ items }: RingGalleryProps) {
     });
   }, [items, markLoaded]);
 
+  const handleRotationComplete = useCallback((index: number) => {
+    tweenRef.current = null;
+    useTransitionStore.getState().setTopIndex(index);
+    useTransitionStore.getState().setPhase("idle");
+  }, []);
+
+  const handleSelect = useCallback(
+    (index: number) => {
+      const store = useTransitionStore.getState();
+      if (store.phase !== "idle") return;
+
+      tweenRef.current?.kill();
+
+      const item = items[index];
+      if (!item) return;
+
+      const delta = clockwiseDelta(index, count);
+      store.select({ slug: item.slug, index, delta });
+
+      if (delta === 0) {
+        handleRotationComplete(index);
+        return;
+      }
+
+      const proxy = proxyRef.current;
+      contextRef.current?.add(() => {
+        tweenRef.current = rotateRing({
+          proxy,
+          to: delta,
+          onLayout: applyLayout,
+          onComplete: () => handleRotationComplete(index),
+        });
+      });
+    },
+    [applyLayout, count, handleRotationComplete, items],
+  );
+
   return (
     <div
+      ref={rootRef}
       data-ring-gallery
       className={`absolute inset-0 transition-opacity duration-700 ${
         ready ? "opacity-100" : "opacity-0"
@@ -94,7 +146,8 @@ export function RingGallery({ items }: RingGalleryProps) {
           data-ring-index={index}
           data-slug={item.slug}
           aria-label={`Lihat project ${item.title}`}
-          className="absolute left-0 top-0 cursor-pointer overflow-hidden p-0 opacity-100"
+          onClick={() => handleSelect(index)}
+          className="absolute left-0 top-0 cursor-pointer overflow-hidden p-0"
           style={{ zIndex: index + 1, border: 0, borderRadius: 0 }}
         >
           <Image
