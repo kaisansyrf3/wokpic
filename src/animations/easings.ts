@@ -7,3 +7,7 @@ export const FADE_EASE = "power1.out";
 export const EXPAND_DURATION = 1;
 export const CROSSFADE_DURATION = 0.5;
 export const CAPTION_FADE_DURATION = 0.25;
+export const CLOSE_CONTROLS_DURATION = 0.25;
+export const CLOSE_PHOTO_DURATION = 0.4;
+export const RETURN_FADE_DURATION = 0.5;
+export const RETURN_HOLD = 0.2;

@@ -141,7 +141,7 @@ Satu state `rot` (radian) di proxy GSAP; semua posisi foto dihitung dari nilai i
 secara terpisah, jadi cincin tidak pernah "geser sendiri".
 
 ```
-idle → rotating → expanding → viewing → dissolving → returning → idle
+idle → rotating → expanding → viewing → closing → returning → idle
 ```
 
 - Fase bukan `idle` mengabaikan klik (mesin fase ada di `src/store`).
@@ -149,11 +149,10 @@ idle → rotating → expanding → viewing → dissolving → returning → idl
   detik, easing `power2.inOut`.
 - `TransitionProvider` (level root) memiliki satu klon foto tetap; morph ke viewer memakai klon
   itu sehingga tidak ada kedip antar-rute.
-- `X` memicu `pixelDissolve` pada satu canvas ±48×32 dengan `stagger: { from: "random" }`,
-  dijalankan oleh `gsap.ticker`; gambar dimuat dengan `crossOrigin="anonymous"` agar canvas
-  tidak ter-blok.
-- Fase `returning` merender cincin pada `rot = delta` dalam keadaan tersembunyi, memunculkannya,
-  lalu memutar balik ke 0.
+- `X` memicu fase `closing`: kontrol memudar (0,25s), lalu foto memudar (0,4s), baru pindah ke `/`.
+  Tidak ada canvas, partikel, atau layar hitam di antara keduanya.
+- Fase `returning` merender cincin pada `rot = delta` dalam keadaan tersembunyi, memunculkannya
+  (0,5s), menahan 0,2s, lalu memutar balik ke kiri ke 0.
 - Buka `/works/[slug]` langsung (URL, refresh, Share) → delta dihitung dari posisi slug di hero,
   jadi animasi tetap masuk akal tanpa pernah berada di halaman utama.
 - Hanya `transform` dan `opacity` yang dianimasi. Seluruh timeline GSAP tinggal di
@@ -170,7 +169,7 @@ di `src/components/home/RingGallery.tsx` dan `src/animations/`.
 
 ```
 src/
-  animations/   ringLayout, ringRotate, ringReturn, expandToViewer, pixelDissolve, pageReveal
+  animations/   ringLayout, ringRotate, ringReturn, expandToViewer, pageReveal
   app/
     (site)/     landing + /service, /about, /contact (chrome: Header/Footer)
     (viewer)/   /works/[slug] layar-penuh

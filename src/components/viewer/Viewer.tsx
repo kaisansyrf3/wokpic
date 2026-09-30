@@ -3,19 +3,20 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { CROSSFADE_DURATION, CROSSFADE_EASE } from "@/animations/easings";
+import {
+  CLOSE_CONTROLS_DURATION,
+  CLOSE_PHOTO_DURATION,
+  CROSSFADE_DURATION,
+  CROSSFADE_EASE,
+  FADE_EASE,
+} from "@/animations/easings";
 import {
   clearPendingClone,
   loadDecodedImage,
   resolvePhotoFit,
   type PhotoFit,
 } from "@/animations/expandToViewer";
-import { runPixelDissolve } from "@/animations/pixelDissolve";
 import { clockwiseDelta } from "@/animations/ringLayout";
-import {
-  fadeOverlayTo,
-  getTransitionNodes,
-} from "@/components/transition/TransitionProvider";
 import { ViewerControls } from "@/components/viewer/ViewerControls";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
@@ -31,7 +32,6 @@ type ViewerProps = {
 };
 
 const SWIPE_THRESHOLD = 48;
-const DARK_HOLD_MS = 260;
 
 export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProps) {
   const router = useRouter();
@@ -39,7 +39,6 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
   const [front, setFront] = useState(0);
   const [back, setBack] = useState<number | null>(null);
   const [fit, setFit] = useState<PhotoFit>("contain");
-  const [controlsVisible, setControlsVisible] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const frontRef = useRef<HTMLImageElement>(null);
@@ -149,32 +148,38 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
     const store = useTransitionStore.getState();
     if (store.phase !== "viewing") return;
 
-    setControlsVisible(false);
-    store.setPhase("dissolving");
+    store.setPhase("closing");
+    fadeTweenRef.current?.kill();
 
     const goHome = () => {
       useTransitionStore.getState().beginReturn();
       router.push("/");
     };
 
-    const canvas = getTransitionNodes().canvas;
-    const image = frontRef.current;
-
-    if (!canvas || !image || !image.complete || image.naturalWidth === 0) {
+    const container = containerRef.current;
+    if (!container) {
       goHome();
       return;
     }
 
-    if (containerRef.current) containerRef.current.style.visibility = "hidden";
+    const controls = container.querySelector("[data-viewer-controls]");
+    const images = container.querySelectorAll("img");
 
-    runPixelDissolve({
-      image,
-      canvas,
-      onComplete: () => {
-        fadeOverlayTo(1, 0.25);
-        window.setTimeout(goHome, DARK_HOLD_MS);
-      },
-    });
+    const timeline = gsap.timeline({ onComplete: goHome });
+    if (controls) {
+      timeline.to(controls, {
+        opacity: 0,
+        duration: CLOSE_CONTROLS_DURATION,
+        ease: FADE_EASE,
+      }, 0);
+    }
+    if (images.length > 0) {
+      timeline.to(images, {
+        opacity: 0,
+        duration: CLOSE_PHOTO_DURATION,
+        ease: FADE_EASE,
+      }, CLOSE_CONTROLS_DURATION * 0.5);
+    }
   }, [router]);
 
   useEffect(() => {
@@ -225,7 +230,6 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
           src={backPhoto.url}
           alt=""
           aria-hidden
-          crossOrigin="anonymous"
           decoding="async"
           draggable={false}
           className="absolute inset-0 h-full w-full"
@@ -238,7 +242,6 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
         ref={frontRef}
         src={frontPhoto.url}
         alt={title}
-        crossOrigin="anonymous"
         decoding="async"
         draggable={false}
         onLoad={handleFrontLoad}
@@ -247,7 +250,6 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
       />
 
       <ViewerControls
-        visible={controlsVisible}
         onPrev={() => navigate(-1)}
         onNext={() => navigate(1)}
         onClose={handleClose}

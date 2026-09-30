@@ -5,14 +5,12 @@ import { usePathname } from "next/navigation";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import type { SocialLink } from "@/types/database";
 
 type SiteChromeProps = {
-  socialLinks: SocialLink[];
   children: React.ReactNode;
 };
 
-export function SiteChrome({ socialLinks, children }: SiteChromeProps) {
+export function SiteChrome({ children }: SiteChromeProps) {
   const pathname = usePathname();
   const isLanding = pathname === "/";
 
@@ -26,7 +24,7 @@ export function SiteChrome({ socialLinks, children }: SiteChromeProps) {
       <main className={isLanding ? "relative h-full" : "relative flex-1 pt-20 md:pt-24"}>
         {children}
       </main>
-      {!isLanding ? <Footer socialLinks={socialLinks} /> : null}
+      {!isLanding ? <Footer /> : null}
     </div>
   );
 

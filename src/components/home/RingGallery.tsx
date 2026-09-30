@@ -4,16 +4,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { FADE_EASE } from "@/animations/easings";
+import { FADE_EASE, RETURN_FADE_DURATION, RETURN_HOLD } from "@/animations/easings";
 import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/ringLayout";
 import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
 import { clearPendingClone, expandToViewer } from "@/animations/expandToViewer";
 import { returnRing } from "@/animations/ringReturn";
 import { CenterLogo } from "@/components/home/CenterLogo";
-import {
-  fadeOverlayTo,
-  getTransitionNodes,
-} from "@/components/transition/TransitionProvider";
+import { getTransitionNodes } from "@/components/transition/TransitionProvider";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
 import type { HeroItem } from "@/types/content";
@@ -129,9 +126,12 @@ export function RingGallery({ items }: RingGalleryProps) {
     if (!ready || !rootRef.current) return;
 
     const store = useTransitionStore.getState();
-    fadeOverlayTo(0, REVEAL_DURATION);
 
     if (!store.returning) {
+      // Browser back, or a landing mount caught mid-transition: show the ring
+      // at its resting position instead of replaying an animation.
+      if (store.phase !== "idle") store.reset();
+
       gsap.to(rootRef.current, {
         opacity: 1,
         duration: REVEAL_DURATION,
@@ -142,17 +142,13 @@ export function RingGallery({ items }: RingGalleryProps) {
 
     const delta = store.delta;
 
-    gsap.to(rootRef.current, {
-      opacity: 1,
-      duration: REVEAL_DURATION,
-      ease: FADE_EASE,
+    const timeline = gsap.timeline({
       onComplete: () => {
         if (delta <= 0) {
           useTransitionStore.getState().reset();
           return;
         }
 
-        useTransitionStore.getState().setPhase("returning");
         contextRef.current?.add(() => {
           tweenRef.current = returnRing({
             proxy: proxyRef.current,
@@ -163,6 +159,14 @@ export function RingGallery({ items }: RingGalleryProps) {
         });
       },
     });
+
+    timeline
+      .to(rootRef.current, {
+        opacity: 1,
+        duration: RETURN_FADE_DURATION,
+        ease: FADE_EASE,
+      })
+      .to({}, { duration: RETURN_HOLD });
   }, [ready, applyLayout]);
 
   const handleRotationComplete = useCallback(

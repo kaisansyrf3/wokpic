@@ -5,7 +5,7 @@ export type TransitionPhase =
   | "rotating"
   | "expanding"
   | "viewing"
-  | "dissolving"
+  | "closing"
   | "returning";
 
 type TransitionState = {

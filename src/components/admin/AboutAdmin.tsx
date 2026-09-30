@@ -236,8 +236,7 @@ export function AboutAdmin({ about }: { about: About }) {
 
         {rows.length === 0 ? (
           <p className="text-sm text-ash">
-            Belum ada tautan. Footer dan halaman About hanya menampilkan sosial media yang diisi di
-            sini.
+            Belum ada tautan. Halaman About hanya menampilkan sosial media yang diisi di sini.
           </p>
         ) : (
           <Sortable

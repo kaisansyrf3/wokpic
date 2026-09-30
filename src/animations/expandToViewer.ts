@@ -44,7 +44,6 @@ export function computePhotoRect(
 export function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new window.Image();
-    image.crossOrigin = "anonymous";
     image.decoding = "async";
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error(`Gambar gagal dimuat: ${url}`));
@@ -132,7 +131,6 @@ export async function expandToViewer({
   clone.src = url;
   clone.alt = "";
   clone.draggable = false;
-  clone.crossOrigin = "anonymous";
   clone.decoding = "sync";
   clone.style.cssText = "display:block;width:100%;height:100%;object-fit:cover;";
 

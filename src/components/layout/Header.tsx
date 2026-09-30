@@ -37,18 +37,6 @@ export function Header() {
           {siteConfig.wordmark}
         </Link>
 
-        <nav className="pointer-events-auto hidden flex-1 justify-center md:flex">
-          <Link
-            href="/"
-            className={cn(
-              "ui-label py-1 text-ash transition-colors hover:text-chalk",
-              pathname === "/" && "border-b border-chalk/60 text-chalk",
-            )}
-          >
-            WORKS
-          </Link>
-        </nav>
-
         <nav className="pointer-events-auto hidden items-center gap-8 md:flex">
           {navLinks.slice(1).map((link) => (
             <Link
