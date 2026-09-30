@@ -38,10 +38,16 @@
 @utility dot-field {
   background-image: radial-gradient(
     circle at center,
-    rgb(255 255 255 / 0.09) 1px,
+    rgb(255 255 255 / 0.16) 1px,
     transparent 1px
   );
-  background-size: 26px 26px;
+  background-size: 18px 18px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 58% at 50% 50%,
+    transparent 52%,
+    black 80%
+  );
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 50%, transparent 52%, black 80%);
 }
 
 @utility ui-label {

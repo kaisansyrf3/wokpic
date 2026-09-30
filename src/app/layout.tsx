@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 
+import { TransitionProvider } from "@/components/transition/TransitionProvider";
 import { siteConfig } from "@/config/site";
 
 import "./globals.css";
@@ -33,7 +34,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className={grotesk.variable}>
-      <body className="bg-ink font-sans text-chalk antialiased">{children}</body>
+      <body className="bg-ink font-sans text-chalk antialiased">
+        <TransitionProvider>{children}</TransitionProvider>
+      </body>
     </html>
   );
 }

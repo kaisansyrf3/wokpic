@@ -19,14 +19,11 @@ export function SiteChrome({ socialLinks, children }: SiteChromeProps) {
   const shell = (
     <div
       data-site-chrome
-      className={
-        isLanding
-          ? "dot-field no-page-scroll relative"
-          : "dot-field relative flex min-h-dvh flex-col"
-      }
+      className={isLanding ? "no-page-scroll relative" : "relative flex min-h-dvh flex-col"}
     >
+      <div className="dot-field pointer-events-none absolute inset-0" aria-hidden />
       <Header />
-      <main className={isLanding ? "h-full" : "flex-1 pt-20 md:pt-24"}>
+      <main className={isLanding ? "relative h-full" : "relative flex-1 pt-20 md:pt-24"}>
         {children}
       </main>
       {!isLanding ? <Footer socialLinks={socialLinks} /> : null}

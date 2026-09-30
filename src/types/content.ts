@@ -18,6 +18,19 @@ export type HeroItem = RingImage & {
   category: string | null;
 };
 
+export type ProjectPhoto = RingImage & {
+  id: string;
+};
+
+export type ProjectDetail = {
+  id: string;
+  slug: string;
+  title: string;
+  category: string | null;
+  description: string | null;
+  photos: ProjectPhoto[];
+};
+
 export type ServiceWithFeatures = Omit<Service, "features"> & {
   features: string[];
 };

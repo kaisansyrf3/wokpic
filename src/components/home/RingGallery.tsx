@@ -1,10 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { FADE_EASE } from "@/animations/easings";
 import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/ringLayout";
 import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
+import { clearPendingClone, expandToViewer } from "@/animations/expandToViewer";
+import { getTransitionNodes } from "@/components/transition/TransitionProvider";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
 import type { HeroItem } from "@/types/content";
@@ -16,7 +20,11 @@ type RingGalleryProps = {
 type RingGeometry = ReturnType<typeof computeRingGeometry>;
 type GsapContext = ReturnType<typeof gsap.context>;
 
+const REVEAL_DURATION = 0.7;
+
 export function RingGallery({ items }: RingGalleryProps) {
+  const router = useRouter();
+
   const rootRef = useRef<HTMLDivElement>(null);
   const photoRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const geometryRef = useRef<RingGeometry | null>(null);
@@ -91,21 +99,61 @@ export function RingGallery({ items }: RingGalleryProps) {
     });
   }, [items, markLoaded]);
 
-  const handleRotationComplete = useCallback((index: number) => {
-    tweenRef.current = null;
-    useTransitionStore.getState().setTopIndex(index);
-    useTransitionStore.getState().setPhase("idle");
-  }, []);
+  // Nothing is shown until every thumbnail has decoded, so there is no pop-in.
+  useEffect(() => {
+    if (!ready || !rootRef.current) return;
+    gsap.to(rootRef.current, {
+      opacity: 1,
+      duration: REVEAL_DURATION,
+      ease: FADE_EASE,
+    });
+  }, [ready]);
+
+  const handleRotationComplete = useCallback(
+    (index: number) => {
+      tweenRef.current = null;
+
+      const store = useTransitionStore.getState();
+      store.setTopIndex(index);
+
+      const item = items[index];
+      const source = photoRefs.current[index];
+      const cloneLayer = getTransitionNodes().cloneLayer;
+
+      if (!item || !source || !cloneLayer) {
+        store.setPhase("idle");
+        return;
+      }
+
+      store.setPhase("expanding");
+
+      expandToViewer({
+        source,
+        url: item.url,
+        cloneLayer,
+        fadeOut: [
+          rootRef.current,
+          document.querySelector<HTMLElement>("[data-ring-caption]"),
+          document.querySelector<HTMLElement>("[data-site-header]"),
+        ],
+        onArrived: () => router.push(`/works/${item.slug}`),
+      }).catch(() => {
+        clearPendingClone();
+        useTransitionStore.getState().setPhase("idle");
+      });
+    },
+    [items, router],
+  );
 
   const handleSelect = useCallback(
     (index: number) => {
       const store = useTransitionStore.getState();
       if (store.phase !== "idle") return;
 
-      tweenRef.current?.kill();
-
       const item = items[index];
       if (!item) return;
+
+      tweenRef.current?.kill();
 
       const delta = clockwiseDelta(index, count);
       store.select({ slug: item.slug, index, delta });
@@ -129,13 +177,7 @@ export function RingGallery({ items }: RingGalleryProps) {
   );
 
   return (
-    <div
-      ref={rootRef}
-      data-ring-gallery
-      className={`absolute inset-0 transition-opacity duration-700 ${
-        ready ? "opacity-100" : "opacity-0"
-      }`}
-    >
+    <div ref={rootRef} data-ring-gallery className="absolute inset-0" style={{ opacity: 0 }}>
       {items.map((item, index) => (
         <button
           key={item.projectId}

@@ -14,10 +14,13 @@ export function Header() {
 
   return (
     <>
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-5 md:px-10 md:py-7">
+      <header
+        data-site-header
+        className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-5 md:px-10 md:py-7"
+      >
         <Link
           href="/"
-          className="ui-label pointer-events-auto text-sm font-medium tracking-[0.3em] text-chalk"
+          className="pointer-events-auto text-xl font-light tracking-[0.3em] text-chalk md:text-2xl"
           aria-label={`${siteConfig.name} — beranda`}
         >
           {siteConfig.wordmark}

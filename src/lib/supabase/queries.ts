@@ -6,6 +6,7 @@ import type { Database, SocialLink } from "@/types/database";
 import type {
   AboutContent,
   HeroItem,
+  ProjectDetail,
   RingImage,
   ServiceWithFeatures,
 } from "@/types/content";
@@ -106,7 +107,7 @@ export async function getHeroItems(): Promise<HeroItem[]> {
 
 export async function getPublishedProjectBySlug(
   slug: string,
-): Promise<(Project & { images: ProjectImage[] }) | null> {
+): Promise<ProjectDetail | null> {
   const supabase = publicClient();
 
   const { data, error } = await supabase
@@ -125,11 +126,19 @@ export async function getPublishedProjectBySlug(
   if (!data) return null;
 
   const project = data as unknown as Project & { project_images: ProjectImage[] };
-  const images = [...(project.project_images ?? [])].sort(
-    (a, b) => Number(a.is_cover) * -1 || a.sort_order - b.sort_order,
-  );
 
-  return { ...project, images };
+  const photos = [...(project.project_images ?? [])]
+    .sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order)
+    .map((image) => ({ ...toRingImage(image), id: image.id }));
+
+  return {
+    id: project.id,
+    slug: project.slug,
+    title: project.title,
+    category: project.category,
+    description: project.description,
+    photos,
+  };
 }
 
 export async function getPublishedSlugs(): Promise<string[]> {

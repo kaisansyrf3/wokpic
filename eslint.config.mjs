@@ -14,6 +14,12 @@ const eslintConfig = [
   },
   ...coreWebVitals,
   ...typescriptConfig,
+  {
+    // The viewer needs raw <img> elements: exact object-fit control for the
+    // shared-element handoff and crossOrigin for the pixel-dissolve canvas.
+    files: ["src/components/viewer/**/*.tsx"],
+    rules: { "@next/next/no-img-element": "off" },
+  },
 ];
 
 export default eslintConfig;
