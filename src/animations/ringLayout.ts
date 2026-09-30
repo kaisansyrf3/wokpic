@@ -10,21 +10,33 @@ export type RingGeometry = {
   boxHeight: number;
 };
 
-/** Tuning knobs for the ellipse the photos sit on. */
+/**
+ * The ring is laid out inside a vertical band that sits between the header and
+ * the caption. Photo size is then derived from whatever the band leaves over,
+ * so a short viewport shrinks the photos instead of letting them fold over the
+ * centre logo or the chrome.
+ */
 const DESKTOP = {
   rxRatio: 0.3,
-  ryRatio: 0.3,
+  ryRatio: 0.27,
   boxRatio: 0.11,
-  minBoxWidth: 120,
-  maxBoxWidth: 220,
+  headerSpace: 96,
+  footerSpace: 64,
+  /** Keep this much of the ellipse free around the centre logo. */
+  centreGap: 46,
+  minBoxHeight: 96,
+  maxBoxHeight: 296,
 } as const;
 
 const MOBILE = {
   rxRatio: 0.34,
-  ryRatio: 0.3,
+  ryRatio: 0.28,
   boxRatio: 0.26,
-  minBoxWidth: 72,
-  maxBoxWidth: 132,
+  headerSpace: 80,
+  footerSpace: 56,
+  centreGap: 34,
+  minBoxHeight: 96,
+  maxBoxHeight: 180,
 } as const;
 
 const PORTRAIT_RATIO = 4 / 3;
@@ -37,22 +49,41 @@ export function computeRingGeometry(
   viewportWidth: number,
   viewportHeight: number,
 ): RingGeometry {
-  const isMobile = viewportWidth < MOBILE_BREAKPOINT;
-  const preset = isMobile ? MOBILE : DESKTOP;
+  const preset = viewportWidth < MOBILE_BREAKPOINT ? MOBILE : DESKTOP;
 
-  const boxWidth = clamp(
-    preset.boxRatio * viewportWidth,
-    preset.minBoxWidth,
-    preset.maxBoxWidth,
+  const band = Math.max(
+    preset.minBoxHeight + 2 * preset.centreGap,
+    viewportHeight - preset.headerSpace - preset.footerSpace,
+  );
+
+  const ry = Math.min(
+    preset.ryRatio * viewportHeight,
+    (band - preset.minBoxHeight) / 2,
+  );
+
+  // A photo may not cross the centre logo, nor poke out of the band. The 44px
+  // floor keeps a tap target; below that the ring simply stops fitting.
+  // The area floor stops narrow-tall screens (tablet portrait) from getting
+  // postage-stamp photos, because width alone would drive the size there.
+  const boxHeight = clamp(
+    Math.min(
+      Math.max(preset.boxRatio * viewportWidth, 0.16 * Math.min(viewportWidth, viewportHeight)) *
+        PORTRAIT_RATIO,
+      preset.maxBoxHeight,
+      2 * (ry - preset.centreGap),
+      band - 2 * ry,
+    ),
+    44,
+    preset.maxBoxHeight,
   );
 
   return {
     cx: viewportWidth / 2,
-    cy: viewportHeight / 2,
+    cy: preset.headerSpace + band / 2,
     rx: preset.rxRatio * viewportWidth,
-    ry: preset.ryRatio * viewportHeight,
-    boxWidth,
-    boxHeight: boxWidth * PORTRAIT_RATIO,
+    ry,
+    boxWidth: boxHeight / PORTRAIT_RATIO,
+    boxHeight,
   };
 }
 

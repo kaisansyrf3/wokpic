@@ -43,11 +43,11 @@
   );
   background-size: 18px 18px;
   -webkit-mask-image: radial-gradient(
-    ellipse 62% 58% at 50% 50%,
-    transparent 52%,
-    black 80%
+    ellipse 55% 50% at 50% 50%,
+    transparent 62%,
+    black 88%
   );
-  mask-image: radial-gradient(ellipse 62% 58% at 50% 50%, transparent 52%, black 80%);
+  mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 62%, black 88%);
 }
 
 @utility ui-label {

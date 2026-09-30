@@ -4,7 +4,7 @@ export const siteConfig = {
   tagline: "Wedding Photography",
   description:
     "Portofolio fotografi pernikahan. Cerita yang direkam dengan cahaya, ketenangan, dan detail.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   locale: "id_ID",
   timezone: "Asia/Jakarta",
 } as const;

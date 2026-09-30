@@ -1,4 +1,3 @@
-import { CenterLogo } from "@/components/home/CenterLogo";
 import { RingCaption } from "@/components/home/RingCaption";
 import { RingGallery } from "@/components/home/RingGallery";
 import { getHeroItems } from "@/lib/supabase/queries";
@@ -19,7 +18,6 @@ export default async function LandingPage() {
   return (
     <div className="relative h-full w-full">
       <RingGallery items={items} />
-      <CenterLogo />
       <RingCaption items={items} />
     </div>
   );

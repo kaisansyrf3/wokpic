@@ -1,9 +1,15 @@
 import { siteConfig } from "@/config/site";
 
-export function CenterLogo() {
+export type CenterLogoProps = {
+  /** Passed as a plain prop (React 19) so the ring can position it from geometry. */
+  ref?: React.Ref<HTMLDivElement>;
+};
+
+export function CenterLogo({ ref }: CenterLogoProps) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 text-center select-none"
+      ref={ref}
+      className="pointer-events-none absolute left-0 top-0 z-30 text-center select-none"
       aria-hidden
     >
       <span className="block text-base font-light uppercase tracking-[0.34em] text-chalk md:text-lg">
