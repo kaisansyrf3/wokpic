@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #070405;
+  --color-ink-soft: #0d090b;
+  --color-line: #ffffff1f;
+  --color-chalk: #f5f2f2;
+  --color-ash: #a09a9c;
+
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+
+  --tracking-ui: 0.22em;
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-chalk);
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-chalk);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-chalk);
+    color: var(--color-ink);
+  }
+}
+
+@utility dot-field {
+  background-image: radial-gradient(
+    circle at center,
+    rgb(255 255 255 / 0.09) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+}
+
+@utility ui-label {
+  text-transform: uppercase;
+  font-size: 0.625rem;
+  letter-spacing: var(--tracking-ui);
+}
+
+@layer utilities {
+  .no-page-scroll {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
