@@ -11,9 +11,20 @@ import { cn } from "@/lib/utils";
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isLanding = pathname === "/";
 
   return (
     <>
+      {/* Scrolled pages need a scrim under the header bar: the wordmark would otherwise sit on
+          top of text. z-30 keeps it above page content and below the header itself (z-40),
+          and the landing page never scrolls, so the ring keeps its clean backdrop. */}
+      {isLanding ? null : (
+        <span
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 top-0 z-30 h-28 bg-gradient-to-b from-ink via-ink/95 to-transparent"
+        />
+      )}
+
       <header
         data-site-header
         className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-5 md:px-10 md:py-7"

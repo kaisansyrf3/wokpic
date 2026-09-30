@@ -93,3 +93,22 @@ export const aboutSchema = z.object({
 });
 
 export type AboutInput = z.infer<typeof aboutSchema>;
+
+export const contactSchema = z.object({
+  name: z.string().trim().min(1, "Nama wajib diisi.").max(80, "Nama maksimal 80 karakter."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email wajib diisi.")
+    .max(160, "Email terlalu panjang.")
+    .email("Format email tidak valid."),
+  phone: z.string().trim().max(30, "Nomor telepon terlalu panjang."),
+  service_slug: z.string().trim().max(80),
+  body: z
+    .string()
+    .trim()
+    .min(10, "Ceritakan sedikit lebih panjang, minimal 10 karakter.")
+    .max(2000, "Pesan maksimal 2000 karakter."),
+});
+
+export type ContactInput = z.infer<typeof contactSchema>;

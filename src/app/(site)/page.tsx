@@ -1,6 +1,22 @@
+import type { Metadata } from "next";
+
 import { RingCaption } from "@/components/home/RingCaption";
 import { RingGallery } from "@/components/home/RingGallery";
+import { siteConfig } from "@/config/site";
 import { getHeroItems } from "@/lib/supabase/queries";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const items = await getHeroItems();
+  const cover = items[0];
+
+  return {
+    openGraph: {
+      url: siteConfig.url,
+      images: cover ? [{ url: cover.url, alt: siteConfig.description }] : undefined,
+    },
+    twitter: cover ? { card: "summary_large_image", images: [cover.url] } : undefined,
+  };
+}
 
 export default async function LandingPage() {
   const items = await getHeroItems();

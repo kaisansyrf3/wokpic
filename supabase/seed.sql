@@ -20,7 +20,7 @@ create temp table seed_project (
 
 insert into seed_project (ord, slug, title, category, description, published, photo_count) values
   (1, 'senja-di-ubud',      'Senja di Ubud',       'wedding',    'Upacara sore di tengah sawah terasering, ditutup langit jingga Ubud.', true, 7),
-  (2, 'janji-di-pantai',    'Janji di Pantai',     'prewedding', 'Sesi prewedding pieds nus di garis pantai selatan saat matahari turun.', true, 6),
+  (2, 'janji-di-pantai',    'Janji di Pantai',     'prewedding', 'Sesi prewedding tanpa alas kaki di garis pantai selatan saat matahari turun.', true, 6),
   (3, 'akad-keluarga-harta','Akad Keluarga Harta', 'wedding',    'Akad khidmat di rumah keluarga, dilanjutkan makan siang bersama.', true, 5),
   (4, 'kabut-bratan',       'Kabut Bratan',        'prewedding', 'Pagi berkabut di tepi danau, dengan doa-doa yang diucapkan pelan.', true, 8),
   (5, 'malam-di-jiwa',      'Malam di Jiwa',       'wedding',    'Resepsi malam dengan lampu hangat dan tarian yang tak mau berhenti.', true, 6),
@@ -119,7 +119,7 @@ insert into public.services (slug, name, tagline, price, features, is_active, so
 
 update public.site_settings
 set about_name = 'Nama Fotografer',
-    about_role = 'Wedding Photographer',
+    about_role = 'Fotografer Pernikahan',
     about_bio  = 'Saya merekam pernikahan dengan pendekatan dokumenter: tenang, tidak banyak arahan, dan membiarkan momen terjadi apa adanya. Berbasis di Bali, sering bepergian ke seluruh Indonesia.',
     about_photo_url = null,
     social_links = '[

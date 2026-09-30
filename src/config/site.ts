@@ -4,7 +4,8 @@ export const siteConfig = {
   tagline: "Wedding Photography",
   description:
     "Portofolio fotografi pernikahan. Cerita yang direkam dengan cahaya, ketenangan, dan detail.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  // Trailing slash removed: paths are concatenated with this value as a prefix.
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, ""),
   locale: "id_ID",
   timezone: "Asia/Jakarta",
 } as const;

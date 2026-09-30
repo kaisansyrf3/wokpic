@@ -63,6 +63,33 @@
   }
 }
 
+/* Public forms: dark, hairline borders, sharp corners. */
+@layer components {
+  .field-input {
+    width: 100%;
+    border: 1px solid var(--color-line);
+    background-color: transparent;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--color-chalk);
+    transition: border-color 120ms linear;
+  }
+
+  .field-input::placeholder {
+    color: #6f6a6b;
+  }
+
+  .field-input:hover,
+  .field-input:focus {
+    border-color: rgb(255 255 255 / 0.45);
+  }
+
+  .field-input option {
+    background-color: var(--color-ink-soft);
+    color: var(--color-chalk);
+  }
+}
+
 /* Admin area: plain, dense, no animation. */
 @layer components {
   .admin-input {

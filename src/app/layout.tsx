@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk } from "next/font/google";
 
 import { TransitionProvider } from "@/components/transition/TransitionProvider";
@@ -27,6 +27,12 @@ export const metadata: Metadata = {
     locale: "id_ID",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#070405",
 };
 
 export default function RootLayout({
