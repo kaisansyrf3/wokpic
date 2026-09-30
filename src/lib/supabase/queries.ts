@@ -3,39 +3,16 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database, SocialLink } from "@/types/database";
+import type {
+  AboutContent,
+  HeroItem,
+  RingImage,
+  ServiceWithFeatures,
+} from "@/types/content";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectImage = Database["public"]["Tables"]["project_images"]["Row"];
-type Service = Database["public"]["Tables"]["services"]["Row"];
 type SiteSettings = Database["public"]["Tables"]["site_settings"]["Row"];
-
-export type RingImage = {
-  url: string;
-  thumbUrl: string;
-  blurDataUrl: string | null;
-  width: number | null;
-  height: number | null;
-};
-
-export type HeroItem = RingImage & {
-  position: number;
-  projectId: string;
-  slug: string;
-  title: string;
-  category: string | null;
-};
-
-export type ServiceWithFeatures = Omit<Service, "features"> & {
-  features: string[];
-};
-
-export type AboutContent = {
-  name: string | null;
-  role: string | null;
-  bio: string | null;
-  photoUrl: string | null;
-  socialLinks: SocialLink[];
-};
 
 /**
  * Public reads use a cookieless anon client so pages stay statically renderable
