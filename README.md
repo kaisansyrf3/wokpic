@@ -203,13 +203,18 @@ supabase/
 1. Import repo, lalu isi **semua** variabel di `.env.example` pada Project Settings → Environment
    Variables (Production & Preview). Set `NEXT_PUBLIC_SITE_URL=https://domain-final-anda` —
    `robots.txt`/`sitemap.xml`/Open Graph membaca nilai ini.
-2. Framework preset Next.js dibiarkan default; **jangan** pindahkan rute `/contact` ke Edge —
-   Nodemailer hanya jalan di runtime Node.js dan sudah dikunci lewat `export const runtime`
-   di `src/app/(site)/contact/page.tsx`.
-3. Setelah deploy pertama: jalankan migration di Supabase (kalau belum), buat user admin, dan
+2. `vercel.json` mengunci Framework Preset ke Next.js (`"framework": "nextjs"`,
+   `"outputDirectory": null`). Tanpa file ini, project yang dibuat sebagai **Other** akan gagal
+   dengan `No Output Directory named "public" found after the Build completed` — solusinya sama:
+   Project Settings → Building and Deployment → **Framework Preset = Next.js**, lalu redeploy.
+3. **Jangan** pindahkan rute `/contact` ke Edge — Nodemailer hanya jalan di runtime Node.js dan
+   sudah dikunci lewat `export const runtime` di `src/app/(site)/contact/page.tsx`. Timeout
+   function biarkan default (Hobby 300 detik) karena SMTP dikirim secara sinkron.
+4. Setelah deploy pertama: jalankan migration di Supabase (kalau belum), buat user admin, dan
    tes form kontak dari domain asli.
-4. `middleware.ts` masih dipakai (bukan `proxy.ts`) walau Next 16 menampilkan peringatan
-   deprecated; perilakunya identik dan akan dipindah saat file itu benar-benar dihentikan.
+5. Peringatan `middleware file convention is deprecated`, `eslint@9.39.5 is no longer supported`,
+   dan `unrs-resolver postinstall` aman diabaikan: `middleware.ts` masih berfungsi (Next 16), dan
+   Next 16 tidak menjalankan ESLint saat build.
 
 ---
 
