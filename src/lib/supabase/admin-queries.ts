@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { Database } from "@/types/database";
+import type { AboutContent, ServiceWithFeatures } from "@/types/content";
+import { parseFeatures, parseSocialLinks } from "@/lib/contentParsers";
 import { createClient } from "@/lib/supabase/server";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
@@ -230,30 +232,50 @@ export async function getMessage(id: string): Promise<Message | null> {
   return data;
 }
 
-export async function listServicesAdmin(): Promise<Service[]> {
+/** Opening a message marks it read, so this runs from the page rather than an effect. */
+export async function markMessageRead(id: string): Promise<void> {
+  const supabase = await db();
+
+  const { error } = await supabase.from("messages").update({ is_read: true }).eq("id", id);
+  if (error) throw new Error(`Gagal menandai pesan: ${error.message}`);
+}
+
+function toServiceRow(service: Service): ServiceWithFeatures {
+  return { ...service, features: parseFeatures(service.features) };
+}
+
+export async function listServicesAdmin(): Promise<ServiceWithFeatures[]> {
   const supabase = await db();
 
   const { data, error } = await supabase
     .from("services")
     .select("*")
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
 
   if (error) throw new Error(`Gagal memuat paket: ${error.message}`);
-  return data ?? [];
+  return (data ?? []).map(toServiceRow);
 }
 
-export async function getServiceForEdit(id: string): Promise<Service | null> {
+export async function getServiceForEdit(id: string): Promise<ServiceWithFeatures | null> {
   const supabase = await db();
 
   const { data, error } = await supabase.from("services").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(`Gagal memuat paket: ${error.message}`);
-  return data;
+  return data ? toServiceRow(data) : null;
 }
 
-export async function getSiteSettings() {
+export async function getSiteSettings(): Promise<AboutContent> {
   const supabase = await db();
 
   const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
   if (error) throw new Error(`Gagal memuat pengaturan situs: ${error.message}`);
-  return data;
+
+  return {
+    name: data?.about_name ?? null,
+    role: data?.about_role ?? null,
+    bio: data?.about_bio ?? null,
+    photoUrl: data?.about_photo_url ?? null,
+    socialLinks: parseSocialLinks(data?.social_links),
+  };
 }

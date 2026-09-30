@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-import type { Database, SocialLink } from "@/types/database";
+import type { Database } from "@/types/database";
 import type {
   AboutContent,
   HeroItem,
@@ -10,6 +10,7 @@ import type {
   RingImage,
   ServiceWithFeatures,
 } from "@/types/content";
+import { parseFeatures, parseSocialLinks } from "@/lib/contentParsers";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectImage = Database["public"]["Tables"]["project_images"]["Row"];
@@ -31,23 +32,6 @@ function publicClient() {
 
   return createClient<Database>(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-function parseFeatures(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((entry): entry is string => typeof entry === "string");
-}
-
-function parseSocialLinks(value: unknown): SocialLink[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (typeof entry !== "object" || entry === null) return [];
-    const candidate = entry as Record<string, unknown>;
-    if (typeof candidate.platform !== "string" || typeof candidate.url !== "string") {
-      return [];
-    }
-    return [{ platform: candidate.platform, url: candidate.url }];
   });
 }
 
