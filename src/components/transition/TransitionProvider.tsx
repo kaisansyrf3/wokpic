@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
+import { FADE_EASE } from "@/animations/easings";
 import { Overlay } from "@/components/transition/Overlay";
 import { PixelDissolve } from "@/components/transition/PixelDissolve";
+import gsap from "@/lib/gsap";
 
 type TransitionNodes = {
   overlay: HTMLDivElement | null;
@@ -24,6 +26,13 @@ const nodes: TransitionNodes = {
 
 export function getTransitionNodes(): TransitionNodes {
   return nodes;
+}
+
+/** Drives the dark veil without React state so animation code can call it. */
+export function fadeOverlayTo(opacity: number, duration: number) {
+  const overlay = nodes.overlay;
+  if (!overlay) return;
+  gsap.to(overlay, { opacity, duration, ease: FADE_EASE, overwrite: "auto" });
 }
 
 export function TransitionProvider({ children }: { children: React.ReactNode }) {

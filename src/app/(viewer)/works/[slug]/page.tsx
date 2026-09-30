@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Viewer } from "@/components/viewer/Viewer";
 import { siteConfig } from "@/config/site";
-import { getPublishedProjectBySlug } from "@/lib/supabase/queries";
+import { getHeroItems, getPublishedProjectBySlug } from "@/lib/supabase/queries";
 
 type ViewerPageProps = {
   params: Promise<{ slug: string }>;
@@ -38,9 +38,23 @@ export async function generateMetadata({ params }: ViewerPageProps): Promise<Met
 
 export default async function ViewerPage({ params }: ViewerPageProps) {
   const { slug } = await params;
-  const project = await getPublishedProjectBySlug(slug);
+
+  const [project, heroItems] = await Promise.all([
+    getPublishedProjectBySlug(slug),
+    getHeroItems(),
+  ]);
 
   if (!project) notFound();
 
-  return <Viewer title={project.title} photos={project.photos} />;
+  const heroIndex = heroItems.findIndex((item) => item.slug === slug);
+
+  return (
+    <Viewer
+      slug={project.slug}
+      title={project.title}
+      photos={project.photos}
+      heroIndex={heroIndex}
+      heroCount={heroItems.length}
+    />
+  );
 }

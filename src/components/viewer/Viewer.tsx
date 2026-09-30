@@ -10,19 +10,30 @@ import {
   resolvePhotoFit,
   type PhotoFit,
 } from "@/animations/expandToViewer";
+import { runPixelDissolve } from "@/animations/pixelDissolve";
+import { clockwiseDelta } from "@/animations/ringLayout";
+import {
+  fadeOverlayTo,
+  getTransitionNodes,
+} from "@/components/transition/TransitionProvider";
 import { ViewerControls } from "@/components/viewer/ViewerControls";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
 import type { ProjectPhoto } from "@/types/content";
 
 type ViewerProps = {
+  slug: string;
   title: string;
   photos: ProjectPhoto[];
+  /** Position of this project in the hero ring, or -1 when it is not in the ring. */
+  heroIndex: number;
+  heroCount: number;
 };
 
 const SWIPE_THRESHOLD = 48;
+const DARK_HOLD_MS = 260;
 
-export function Viewer({ title, photos }: ViewerProps) {
+export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProps) {
   const router = useRouter();
 
   const [front, setFront] = useState(0);
@@ -30,6 +41,7 @@ export function Viewer({ title, photos }: ViewerProps) {
   const [fit, setFit] = useState<PhotoFit>("contain");
   const [controlsVisible, setControlsVisible] = useState(true);
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const frontRef = useRef<HTMLImageElement>(null);
   const fadeTweenRef = useRef<gsap.core.Tween | null>(null);
   const indexRef = useRef(0);
@@ -52,13 +64,25 @@ export function Viewer({ title, photos }: ViewerProps) {
   }, []);
 
   useEffect(() => {
-    useTransitionStore.getState().setPhase("viewing");
+    const store = useTransitionStore.getState();
+
+    // Direct URL / refresh: the store is empty, so rebuild the rotation the
+    // landing will need from this project's slot in the hero ring.
+    if (store.selectedSlug === null && heroIndex >= 0) {
+      store.hydrate({
+        slug,
+        index: heroIndex,
+        delta: clockwiseDelta(heroIndex, heroCount),
+      });
+    }
+
+    store.setPhase("viewing");
 
     return () => {
-      const store = useTransitionStore.getState();
-      if (store.phase === "viewing") store.setPhase("idle");
+      const current = useTransitionStore.getState();
+      if (current.phase === "viewing") current.setPhase("idle");
     };
-  }, []);
+  }, [heroCount, heroIndex, slug]);
 
   // Keep the neighbours warm so stepping never waits on the network.
   useEffect(() => {
@@ -124,8 +148,33 @@ export function Viewer({ title, photos }: ViewerProps) {
   const handleClose = useCallback(() => {
     const store = useTransitionStore.getState();
     if (store.phase !== "viewing") return;
+
     setControlsVisible(false);
-    router.push("/");
+    store.setPhase("dissolving");
+
+    const goHome = () => {
+      useTransitionStore.getState().beginReturn();
+      router.push("/");
+    };
+
+    const canvas = getTransitionNodes().canvas;
+    const image = frontRef.current;
+
+    if (!canvas || !image || !image.complete || image.naturalWidth === 0) {
+      goHome();
+      return;
+    }
+
+    if (containerRef.current) containerRef.current.style.visibility = "hidden";
+
+    runPixelDissolve({
+      image,
+      canvas,
+      onComplete: () => {
+        fadeOverlayTo(1, 0.25);
+        window.setTimeout(goHome, DARK_HOLD_MS);
+      },
+    });
   }, [router]);
 
   useEffect(() => {
@@ -165,6 +214,7 @@ export function Viewer({ title, photos }: ViewerProps) {
 
   return (
     <div
+      ref={containerRef}
       className="absolute inset-0 select-none"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}

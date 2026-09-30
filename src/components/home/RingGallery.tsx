@@ -8,7 +8,11 @@ import { FADE_EASE } from "@/animations/easings";
 import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/ringLayout";
 import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
 import { clearPendingClone, expandToViewer } from "@/animations/expandToViewer";
-import { getTransitionNodes } from "@/components/transition/TransitionProvider";
+import { returnRing } from "@/animations/ringReturn";
+import {
+  fadeOverlayTo,
+  getTransitionNodes,
+} from "@/components/transition/TransitionProvider";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
 import type { HeroItem } from "@/types/content";
@@ -77,6 +81,14 @@ export function RingGallery({ items }: RingGalleryProps) {
     const context = gsap.context(() => {}, rootRef);
     contextRef.current = context;
 
+    // Returning from the viewer: start already rotated so the photo that was
+    // open sits on top, and keep the ring hidden until that is applied.
+    const store = useTransitionStore.getState();
+    if (store.returning && store.delta > 0) {
+      proxyRef.current.rot = store.delta;
+      store.setTopIndex(store.selectedIndex ?? 0);
+    }
+
     measure();
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
@@ -102,12 +114,43 @@ export function RingGallery({ items }: RingGalleryProps) {
   // Nothing is shown until every thumbnail has decoded, so there is no pop-in.
   useEffect(() => {
     if (!ready || !rootRef.current) return;
+
+    const store = useTransitionStore.getState();
+    fadeOverlayTo(0, REVEAL_DURATION);
+
+    if (!store.returning) {
+      gsap.to(rootRef.current, {
+        opacity: 1,
+        duration: REVEAL_DURATION,
+        ease: FADE_EASE,
+      });
+      return;
+    }
+
+    const delta = store.delta;
+
     gsap.to(rootRef.current, {
       opacity: 1,
       duration: REVEAL_DURATION,
       ease: FADE_EASE,
+      onComplete: () => {
+        if (delta <= 0) {
+          useTransitionStore.getState().reset();
+          return;
+        }
+
+        useTransitionStore.getState().setPhase("returning");
+        contextRef.current?.add(() => {
+          tweenRef.current = returnRing({
+            proxy: proxyRef.current,
+            from: delta,
+            onLayout: applyLayout,
+            onComplete: () => useTransitionStore.getState().reset(),
+          });
+        });
+      },
     });
-  }, [ready]);
+  }, [ready, applyLayout]);
 
   const handleRotationComplete = useCallback(
     (index: number) => {

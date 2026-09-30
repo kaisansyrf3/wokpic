@@ -21,6 +21,8 @@ type TransitionState = {
 type TransitionActions = {
   setPhase: (phase: TransitionPhase) => void;
   select: (payload: { slug: string; index: number; delta: number }) => void;
+  /** Fills selection info without moving the phase (direct-URL viewer entry). */
+  hydrate: (payload: { slug: string; index: number; delta: number }) => void;
   setTopIndex: (index: number) => void;
   beginReturn: () => void;
   reset: () => void;
@@ -43,6 +45,9 @@ export const useTransitionStore = create<TransitionState & TransitionActions>()(
 
     select: ({ slug, index, delta }) =>
       set({ phase: "rotating", selectedSlug: slug, selectedIndex: index, delta }),
+
+    hydrate: ({ slug, index, delta }) =>
+      set({ selectedSlug: slug, selectedIndex: index, delta }),
 
     setTopIndex: (index) => set({ topIndex: index }),
 
