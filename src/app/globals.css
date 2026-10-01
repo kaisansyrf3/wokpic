@@ -56,6 +56,28 @@
   letter-spacing: var(--tracking-ui);
 }
 
+/*
+ * Invisible tap area for controls whose look must not change (header MENU,
+ * overlay TUTUP). The pseudo-element belongs to the button, so it is part of
+ * the same hit test without moving a single pixel of text.
+ */
+@layer components {
+  .tap-target {
+    position: relative;
+    touch-action: manipulation;
+  }
+
+  .tap-target::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 48px);
+    height: max(100%, 48px);
+    transform: translate(-50%, -50%);
+  }
+}
+
 @layer utilities {
   .no-page-scroll {
     height: 100dvh;

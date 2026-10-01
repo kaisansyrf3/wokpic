@@ -43,7 +43,7 @@ export function MobileMenu({ open, pathname, onClose }: MobileMenuProps) {
         <button
           type="button"
           onClick={onClose}
-          className="ui-label text-ash transition-colors hover:text-chalk"
+          className="ui-label tap-target text-ash transition-colors hover:text-chalk"
           aria-label="Tutup menu"
           tabIndex={open ? 0 : -1}
         >
@@ -59,7 +59,7 @@ export function MobileMenu({ open, pathname, onClose }: MobileMenuProps) {
             onClick={onClose}
             tabIndex={open ? 0 : -1}
             className={cn(
-              "text-3xl font-light uppercase tracking-[0.18em] transition-colors",
+              "py-1.5 text-3xl font-light uppercase tracking-[0.18em] transition-colors touch-manipulation",
               pathname === link.href ? "text-chalk" : "text-ash hover:text-chalk",
             )}
           >

@@ -55,7 +55,7 @@ export function Header() {
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="ui-label pointer-events-auto text-ash transition-colors hover:text-chalk md:hidden"
+          className="ui-label tap-target pointer-events-auto text-ash transition-colors hover:text-chalk md:hidden"
           aria-label="Buka menu"
           aria-expanded={menuOpen}
         >
