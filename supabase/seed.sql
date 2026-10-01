@@ -56,10 +56,10 @@ begin
         project_id, url, thumb_url, width, height, blur_data_url, is_cover, sort_order
       ) values (
         project_uuid,
-        'https://picsum.photos/seed/' || seed_key || '/800/1200',
-        'https://picsum.photos/seed/' || seed_key || '/300/450',
-        800,
+        'https://picsum.photos/seed/' || seed_key || '/1200/900',
+        'https://picsum.photos/seed/' || seed_key || '/400/300',
         1200,
+        900,
         null,
         i = 1,
         i - 1

@@ -12,36 +12,46 @@ export type RingGeometry = {
 
 /**
  * The ring is laid out inside a vertical band that sits between the header and
- * the caption. Photo size is then derived from whatever the band leaves over,
- * so a short viewport shrinks the photos instead of letting them fold over the
- * centre logo or the chrome.
+ * the caption. Tiles are 4:3 landscape, so their width is derived from whatever
+ * the band and the ellipse leave over: a short viewport shrinks the photos
+ * instead of letting them fold over the centre logo or the chrome.
  */
 const DESKTOP = {
   rxRatio: 0.3,
   ryRatio: 0.27,
-  boxRatio: 0.11,
+  widthRatio: 0.14,
   headerSpace: 96,
   footerSpace: 64,
+  sideMargin: 24,
   /** Keep this much of the ellipse free around the centre logo. */
   centreGap: 46,
-  minBoxHeight: 96,
-  maxBoxHeight: 296,
+  minBoxWidth: 96,
+  maxBoxWidth: 320,
 } as const;
 
 const MOBILE = {
-  rxRatio: 0.34,
-  ryRatio: 0.28,
-  boxRatio: 0.26,
+  rxRatio: 0.36,
+  ryRatio: 0.3,
+  widthRatio: 0.28,
   headerSpace: 80,
   footerSpace: 56,
+  sideMargin: 6,
   centreGap: 34,
-  minBoxHeight: 96,
-  maxBoxHeight: 180,
+  minBoxWidth: 72,
+  maxBoxWidth: 220,
 } as const;
 
-const PORTRAIT_RATIO = 4 / 3;
+/** Landscape tiles: width / height. */
+const TILE_RATIO = 4 / 3;
 const MOBILE_BREAKPOINT = 768;
 
+/**
+ * Adjacent tiles sit TAU/8 apart, so the horizontal distance between the tile at
+ * 12 o'clock and its neighbours is rx * COS45. A tile narrower than that stays
+ * fully visible once the rotation settles instead of being clipped by the two
+ * tiles beside it.
+ */
+const COS45 = Math.SQRT1_2;
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
@@ -51,38 +61,43 @@ export function computeRingGeometry(
 ): RingGeometry {
   const preset = viewportWidth < MOBILE_BREAKPOINT ? MOBILE : DESKTOP;
 
-  const band = Math.max(
-    preset.minBoxHeight + 2 * preset.centreGap,
-    viewportHeight - preset.headerSpace - preset.footerSpace,
-  );
+  const band = viewportHeight - preset.headerSpace - preset.footerSpace;
+  const rx = preset.rxRatio * viewportWidth;
 
-  const ry = Math.min(
-    preset.ryRatio * viewportHeight,
-    (band - preset.minBoxHeight) / 2,
-  );
-
-  // A photo may not cross the centre logo, nor poke out of the band. The 44px
-  // floor keeps a tap target; below that the ring simply stops fitting.
-  // The area floor stops narrow-tall screens (tablet portrait) from getting
-  // postage-stamp photos, because width alone would drive the size there.
-  const boxHeight = clamp(
+  let boxWidth = clamp(
     Math.min(
-      Math.max(preset.boxRatio * viewportWidth, 0.16 * Math.min(viewportWidth, viewportHeight)) *
-        PORTRAIT_RATIO,
-      preset.maxBoxHeight,
-      2 * (ry - preset.centreGap),
-      band - 2 * ry,
+      preset.widthRatio * viewportWidth,
+      preset.maxBoxWidth,
+      // No tile may poke past the edge of the screen.
+      2 * (viewportWidth / 2 - preset.sideMargin - rx),
+      // The 12 o'clock tile must stay clear of its neighbours. The factor keeps
+      // a hair of daylight between them once the ellipse is squashed flat.
+      0.98 * COS45 * rx,
+      // A tile may not cross the centre logo.
+      2 * (rx - preset.centreGap),
     ),
-    44,
-    preset.maxBoxHeight,
+    preset.minBoxWidth,
+    preset.maxBoxWidth,
   );
+
+  let boxHeight = boxWidth / TILE_RATIO;
+
+  // On a short viewport the band, not the tiles, gives way first; only when even
+  // that leaves no room for the logo does the ring shrink.
+  if (boxHeight > band - 2 * preset.centreGap) {
+    boxHeight = Math.max(44, band - 2 * preset.centreGap);
+    boxWidth = boxHeight * TILE_RATIO;
+  }
+
+  // Folding over the header or the caption is worse than a flat ellipse.
+  const ry = Math.min(preset.ryRatio * viewportHeight, (band - boxHeight) / 2);
 
   return {
     cx: viewportWidth / 2,
     cy: preset.headerSpace + band / 2,
-    rx: preset.rxRatio * viewportWidth,
-    ry,
-    boxWidth: boxHeight / PORTRAIT_RATIO,
+    rx,
+    ry: Math.max(0, ry),
+    boxWidth,
     boxHeight,
   };
 }

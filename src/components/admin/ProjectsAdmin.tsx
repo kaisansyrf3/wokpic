@@ -159,7 +159,7 @@ export function ProjectsAdmin({ projects }: { projects: ProjectRow[] }) {
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
             <li key={project.id} className="admin-card flex flex-col">
-              <div className="relative aspect-3/4 w-full overflow-hidden bg-ink">
+              <div className="relative aspect-4/3 w-full overflow-hidden bg-ink">
                 {project.cover ? (
                   <Image
                     src={project.cover.thumb_url ?? project.cover.url}

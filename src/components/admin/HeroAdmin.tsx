@@ -179,7 +179,7 @@ export function HeroAdmin({
         <ul className="grid grid-cols-4 gap-2 sm:grid-cols-8">
           {slots.map((slot, index) => (
             <li key={slot.id} className="space-y-1">
-              <div className="relative aspect-3/4 w-full overflow-hidden border border-line bg-ink-soft">
+              <div className="relative aspect-4/3 w-full overflow-hidden border border-line bg-ink-soft">
                 {slot.coverThumbUrl ? (
                   <Image
                     src={slot.coverThumbUrl}

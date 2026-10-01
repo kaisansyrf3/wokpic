@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { recordImages } from "@/app/admin/(panel)/projects/actions";
 import { FlashMessage, useFlash } from "@/components/admin/Flash";
-import { prepareImage } from "@/lib/imageJob";
+import { prepareImage, isPhotoRatio } from "@/lib/imageJob";
 import { createClient } from "@/lib/supabase/client";
 
 const ACCEPTED = /^image\/(jpeg|png|webp|avif)$/;
@@ -29,6 +29,7 @@ export function PhotoUploader({
 
     const supabase = createClient();
     const payloads: Array<Record<string, unknown>> = [];
+    const offRatio: string[] = [];
     const failures: string[] = [];
 
     setProgress({ done: 0, total: usable.length });
@@ -36,6 +37,8 @@ export function PhotoUploader({
     for (const [index, file] of usable.entries()) {
       try {
         const prepared = await prepareImage(file);
+
+        if (!isPhotoRatio(prepared.width, prepared.height)) offRatio.push(file.name);
 
         const uploadOne = async (blob: Blob, suffix: string) => {
           const path = `${projectId}/${crypto.randomUUID()}-${suffix}.${blob.type === "image/webp" ? "webp" : "jpg"}`;
@@ -79,6 +82,11 @@ export function PhotoUploader({
         kind: "error",
         text: `${payloads.length} foto berhasil, ${failures.length} gagal (${failures[0]}).`,
       });
+    } else if (offRatio.length > 0) {
+      setFlash({
+        kind: "warn",
+        text: `${offRatio.length} dari ${payloads.length} foto bukan rasio 4:3 dan mungkin terpotong di ring (mis. ${offRatio[0]}).`,
+      });
     } else if (payloads.length) {
       setFlash({ kind: "ok", text: `${payloads.length} foto diunggah.` });
     }
@@ -107,7 +115,8 @@ export function PhotoUploader({
           Unggah foto
         </button>
         <p className="text-xs text-ash">
-          Bisa banyak sekaligus. Sisi browser yang mengecilkan jadi 2000 px dan 600 px.
+          Bisa banyak sekaligus. Sisi browser yang mengecilkan jadi 2000 px dan 600 px. Foto
+          sebaiknya 4:3 landscape.
         </p>
       </div>
 

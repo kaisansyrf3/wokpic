@@ -29,7 +29,7 @@ export function RingPreview({ items }: { items: PreviewItem[] }) {
         return (
           <div
             key={item.id}
-            className="absolute aspect-3/4 w-[15%] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-ink-soft"
+            className="absolute aspect-4/3 w-[20%] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-ink-soft"
             style={{ left: `${left}%`, top: `${top}%`, zIndex: index + 1 }}
             title={item.title}
           >

@@ -232,7 +232,7 @@ export function ProjectEditor({
           >
             {ordered.map((image, index) => (
               <SortableItem key={image.id} id={image.id} className="admin-card relative">
-                <div className="relative aspect-3/4 w-full overflow-hidden">
+                <div className="relative aspect-4/3 w-full overflow-hidden">
                   <Image
                     src={image.thumb_url ?? image.url}
                     alt={`Foto ${index + 1}`}

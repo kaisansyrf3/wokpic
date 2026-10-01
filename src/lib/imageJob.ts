@@ -13,6 +13,15 @@ export type PreparedImage = {
 const LARGE_EDGE = 2000;
 const THUMB_EDGE = 600;
 
+/** The ring and the viewer both frame photos as 4:3 landscape. */
+export const PHOTO_RATIO = 4 / 3;
+
+/** Photos are only warned about, never blocked, so a stray crop stays possible. */
+export function isPhotoRatio(width: number, height: number): boolean {
+  if (!width || !height) return true;
+  return Math.abs(width / height - PHOTO_RATIO) / PHOTO_RATIO <= 0.05;
+}
+
 function supportsWebp(): boolean {
   if (typeof document === "undefined") return false;
   const canvas = document.createElement("canvas");

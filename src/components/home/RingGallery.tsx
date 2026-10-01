@@ -257,7 +257,7 @@ export function RingGallery({ items }: RingGalleryProps) {
             alt={item.title}
             fill
             priority
-            sizes="(max-width: 767px) 30vw, 12vw"
+            sizes="(max-width: 767px) 28vw, 14vw"
             className="object-cover"
             draggable={false}
             onLoad={() => markLoaded(index)}

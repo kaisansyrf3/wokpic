@@ -1,9 +1,9 @@
 # IKAI — Website portofolio wedding photography
 
-Situs portofolio satu-fotografer dengan galeri utama berupa **8 foto pada cincin elips** di
-sekeliling wordmark: klik satu foto → cincin berputar searah jarum jam → foto membesar
-layar-penuh lewat transisi shared-element → tombol tutup memecah foto menjadi partikel piksel,
-lalu cincin berputar kembali ke posisi awal.
+Situs portofolio satu-fotografer dengan galeri utama berupa **8 foto 4:3 landscape pada cincin
+elips** di sekeliling logo: klik satu foto → cincin berputar searah jarum jam → foto membesar
+lewat transisi shared-element ke halaman detail → tombol tutup memudarkan foto, lalu cincin
+berputar kembali ke kiri ke posisi awal.
 
 Ganti nama merek, tagline, dan URL cukup di satu file: `src/config/site.ts`.
 
