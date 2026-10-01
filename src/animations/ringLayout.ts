@@ -16,7 +16,7 @@ export type RingGeometry = {
  * The ring is laid out inside a vertical band that sits between the header and
  * the caption. Tiles are 4:3 landscape, so their width is derived from whatever
  * the band and the ellipse leave over: a short viewport shrinks the photos
- * instead of letting them fold over the centre logo or the chrome.
+ * instead of letting them fold over the centre caption or the chrome.
  */
 const DESKTOP = {
   rxRatio: 0.3,
@@ -25,7 +25,7 @@ const DESKTOP = {
   headerSpace: 96,
   footerSpace: 64,
   sideMargin: 24,
-  /** Keep this much of the ellipse free around the centre logo. */
+  /** Keep this much of the ellipse free around the centre caption. */
   centreGap: 46,
   minBoxWidth: 96,
   maxBoxWidth: 320,
@@ -74,7 +74,7 @@ export function computeRingGeometry(
       // The 12 o'clock tile must stay clear of its neighbours. The factor keeps
       // a hair of daylight between them once the ellipse is squashed flat.
       0.98 * COS45 * rx,
-      // A tile may not cross the centre logo.
+      // A tile may not cross the centre caption.
       2 * (rx - preset.centreGap),
     ),
     preset.minBoxWidth,
@@ -84,7 +84,7 @@ export function computeRingGeometry(
   let boxHeight = boxWidth / TILE_RATIO;
 
   // On a short viewport the band, not the tiles, gives way first; only when even
-  // that leaves no room for the logo does the ring shrink.
+  // that leaves no room for the caption does the ring shrink.
   if (boxHeight > band - 2 * preset.centreGap) {
     boxHeight = Math.max(44, band - 2 * preset.centreGap);
     boxWidth = boxHeight * TILE_RATIO;
@@ -105,6 +105,37 @@ export function computeRingGeometry(
 
 export function stepAngle(count: number): number {
   return count > 0 ? TAU / count : 0;
+}
+
+/** Narrowest box the centre caption may be squeezed into, in px. */
+export const CAPTION_MIN_WIDTH = 88;
+
+/** Widest it may grow, even on a huge screen: it must stay a whisper. */
+const CAPTION_MAX_WIDTH = 220;
+
+/**
+ * The widest the centre caption may be: only tiles that reach into the caption's
+ * own vertical band can block it, and taking 60% of the daylight they leave over
+ * keeps a visible gap instead of an accidental collision. Pass the caption
+ * measured at CAPTION_MIN_WIDTH so a taller wrap can never reach into a tile.
+ */
+export function centreCaptionWidth(
+  viewportWidth: number,
+  viewportHeight: number,
+  count: number,
+  captionHeight: number,
+): number {
+  const { rx, ry, boxWidth, boxHeight } = computeRingGeometry(viewportWidth, viewportHeight);
+
+  let half = rx - boxWidth / 2;
+  for (let index = 0; index < count; index++) {
+    const angle = baseAngle(index, count);
+    const y = ry * Math.sin(angle);
+    if (Math.abs(y) > (boxHeight + captionHeight) / 2) continue;
+    half = Math.min(half, Math.abs(rx * Math.cos(angle)) - boxWidth / 2);
+  }
+
+  return Math.max(CAPTION_MIN_WIDTH, Math.min(CAPTION_MAX_WIDTH, Math.max(0, half) * 2 * 0.6));
 }
 
 export function baseAngle(index: number, count: number): number {

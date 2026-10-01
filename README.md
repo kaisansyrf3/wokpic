@@ -1,7 +1,7 @@
 # WOKAI PICTURE — Website portofolio wedding photography
 
 Situs portofolio satu-fotografer dengan galeri utama berupa **8 foto 4:3 landscape pada cincin
-elips** di sekeliling logo: klik satu foto → cincin berputar searah jarum jam → foto membesar
+elips** di sekeliling teks ajakan: klik satu foto → cincin berputar searah jarum jam → foto membesar
 lewat transisi shared-element ke halaman detail → tombol tutup memudarkan foto, lalu cincin
 berputar kembali ke kiri ke posisi awal.
 
@@ -216,7 +216,7 @@ src/
   store/        mesin fase transisi (Zustand)
   types/        database.ts (hasil `npm run gen:types`) + content.ts
 public/
-  logo.png                                    gambar logo di tengah ring
+  logo.png                                    logo merek untuk Header (latar transparan)
 supabase/
   migrations/20261001000000_init_schema.sql   tabel, RLS, bucket, RPC
   migrations/20261001000001_service_categories.sql  kategori paket + RPC paket
@@ -299,7 +299,7 @@ supabase/
 11. `NEXT_PUBLIC_SITE_URL` belum diisi di pengembangan, jadi `robots.txt`/`sitemap.xml` lokal
     menunjuk ke `localhost:3000`.
 12. Lebar tile cincin mobile berakhir di ±25% lebar layar (bukan 28% seperti panduan awal) karena
-    margin aman tepi layar dan logo di tengah; semua tile tetap persis 4:3 dan tidak saling menutup.
+    margin aman tepi layar dan teks ajakan di tengah; semua tile tetap persis 4:3 dan tidak saling menutup.
 13. `‹ ›` ditempatkan di luar bingkai hanya bila space-nya cukup (celah 24 px + tombol 44 px +
     12 px dari tepi layar); selain itu — termasuk di mobile — tombol menumpang di tepi foto dengan
     latar gelap.
@@ -308,6 +308,10 @@ supabase/
 15. `dot-field` sekarang dipasang sekali di root layout sebagai `fixed inset-0`. Di halaman yang
     bisa digulir polanya ikut diam (tidak ikut bergulir) — harganya kecil, dan berkat ini landing
     dan viewer benar-benar memakai latar yang sama.
+16. Teks "Klik gambar untuk melihat portofolio kami" di tengah ring adalah `<p>` biasa tanpa
+    `tabindex`: statis, tidak bisa diklik atau difokuskan, dan memudar bersama cincin. Lebarnya
+    dihitung dari geometri (60% ruang kosong di antara tile yang benar-benar segaris dengan teks,
+    maksimal 220 px, minimal 88 px) sehingga tidak pernah menutupi foto pada tinggi viewport apa pun.
 
 ## Masalah yang sering muncul
 

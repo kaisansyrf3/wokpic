@@ -5,10 +5,17 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { FADE_EASE, RETURN_FADE_DURATION, RETURN_HOLD } from "@/animations/easings";
-import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/ringLayout";
+import {
+  baseAngle,
+  CAPTION_MIN_WIDTH,
+  centreCaptionWidth,
+  clockwiseDelta,
+  computeRingGeometry,
+} from "@/animations/ringLayout";
 import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
 import { clearPendingClone, expandToViewer } from "@/animations/expandToViewer";
 import { returnRing } from "@/animations/ringReturn";
+import { RingHint } from "@/components/home/RingHint";
 import { getTransitionNodes } from "@/components/transition/TransitionProvider";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
@@ -27,6 +34,7 @@ export function RingGallery({ items }: RingGalleryProps) {
   const router = useRouter();
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLParagraphElement>(null);
   const photoRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const geometryRef = useRef<RingGeometry | null>(null);
   const proxyRef = useRef<RotationProxy>({ rot: 0 });
@@ -73,8 +81,24 @@ export function RingGallery({ items }: RingGalleryProps) {
     const geometry = computeRingGeometry(window.innerWidth, window.innerHeight);
     geometryRef.current = geometry;
 
+    if (hintRef.current) {
+      const hint = hintRef.current;
+      gsap.set(hint, { x: geometry.cx, y: geometry.cy, xPercent: -50, yPercent: -50 });
+
+      // Tallest the caption can get, then fit the box so no wrap reaches a tile.
+      gsap.set(hint, { width: CAPTION_MIN_WIDTH });
+      gsap.set(hint, {
+        width: centreCaptionWidth(
+          window.innerWidth,
+          window.innerHeight,
+          count,
+          hint.offsetHeight,
+        ),
+      });
+    }
+
     applyLayout(proxyRef.current.rot);
-  }, [applyLayout]);
+  }, [applyLayout, count]);
 
   useLayoutEffect(() => {
     const context = gsap.context(() => {}, rootRef);
@@ -259,6 +283,7 @@ export function RingGallery({ items }: RingGalleryProps) {
           />
         </button>
       ))}
+      <RingHint ref={hintRef} />
     </div>
   );
 }
