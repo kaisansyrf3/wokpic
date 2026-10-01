@@ -34,7 +34,7 @@ export default async function LandingPage() {
   return (
     <div className="relative h-full w-full">
       <RingGallery items={items} />
-      <RingCaption items={items} />
+      <RingCaption />
     </div>
   );
 }

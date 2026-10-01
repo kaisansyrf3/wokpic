@@ -1,6 +1,8 @@
+const brand = "IKAI";
+
 export const siteConfig = {
-  name: "IKAI",
-  wordmark: "IKAI",
+  name: brand,
+  wordmark: brand,
   tagline: "Wedding Photography",
   description:
     "Portofolio fotografi pernikahan. Cerita yang direkam dengan cahaya, ketenangan, dan detail.",
@@ -8,6 +10,8 @@ export const siteConfig = {
   url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, ""),
   locale: "id_ID",
   timezone: "Asia/Jakarta",
+  // Replace public/logo.png (transparent) and these two intrinsic pixel sizes.
+  logo: { src: "/logo.png", alt: brand, width: 196, height: 90 },
 } as const;
 
 export const navLinks = [

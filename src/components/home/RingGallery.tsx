@@ -125,6 +125,8 @@ export function RingGallery({ items }: RingGalleryProps) {
   useEffect(() => {
     if (!ready || !rootRef.current) return;
 
+    const caption = document.querySelector<HTMLElement>("[data-ring-caption]");
+    const layers = [rootRef.current, caption].filter(Boolean) as HTMLElement[];
     const store = useTransitionStore.getState();
 
     if (!store.returning) {
@@ -132,7 +134,7 @@ export function RingGallery({ items }: RingGalleryProps) {
       // at its resting position instead of replaying an animation.
       if (store.phase !== "idle") store.reset();
 
-      gsap.to(rootRef.current, {
+      gsap.to(layers, {
         opacity: 1,
         duration: REVEAL_DURATION,
         ease: FADE_EASE,
@@ -161,7 +163,7 @@ export function RingGallery({ items }: RingGalleryProps) {
     });
 
     timeline
-      .to(rootRef.current, {
+      .to(layers, {
         opacity: 1,
         duration: RETURN_FADE_DURATION,
         ease: FADE_EASE,

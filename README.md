@@ -7,6 +7,12 @@ berputar kembali ke kiri ke posisi awal.
 
 Ganti nama merek, tagline, dan URL cukup di satu file: `src/config/site.ts`.
 
+Logo di tengah cincin adalah berkas **`public/logo.png`** (latar transparan). Yang ada di repo
+saat ini hanya placeholder bertuliskan "IKAI" — ganti dengan nama dan path yang sama, lalu
+sesuaikan dua angka ukuran (`logo.width` / `logo.height`) di `src/config/site.ts`. Ukuran
+tampilnya diatur oleh CSS (`clamp`), jadi berkas besar tidak akan merusak tata letak. Wordmark
+di Header tetap berupa teks dan tidak berubah.
+
 > Referensi visual yang dipakai hanya sebagai acuan estetika. Tidak ada merek, logo, nama, foto,
 > maupun alur animasi situs lain yang disalin.
 
@@ -187,11 +193,13 @@ src/
     admin/      login + (panel)/ dashboard, projects, hero, services, about, messages
     sitemap.ts  robots.ts  layout.tsx  globals.css
   components/   home/ layout/ transition/ viewer/ service/ ui/ admin/
-  config/site.ts  nama merek, tagline, URL, tautan navigasi
+  config/site.ts  nama merek, tagline, URL, logo, tautan navigasi
   lib/          auth, validation, email, imageJob, format, gsap, viewerFrame, viewport, supabase/
   middleware.ts penjaga /admin
   store/        mesin fase transisi (Zustand)
   types/        database.ts (hasil `npm run gen:types`) + content.ts
+public/
+  logo.png                                    gambar logo di tengah ring
 supabase/
   migrations/20261001000000_init_schema.sql   tabel, RLS, bucket, RPC
   seed.sql                                    konten demo
