@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +16,7 @@ export function Header() {
 
   return (
     <>
-      {/* Scrolled pages need a scrim under the header bar: the wordmark would otherwise sit on
+      {/* Scrolled pages need a scrim under the header bar: the logo would otherwise sit on
           top of text. z-30 keeps it above page content and below the header itself (z-40),
           and the landing page never scrolls, so the ring keeps its clean backdrop. */}
       {isLanding ? null : (
@@ -31,10 +32,19 @@ export function Header() {
       >
         <Link
           href="/"
-          className="pointer-events-auto text-xl font-light tracking-[0.3em] text-chalk md:text-2xl"
-          aria-label={`${siteConfig.name} — beranda`}
+          className="pointer-events-auto flex h-6 items-center md:h-[clamp(24px,2.2vw,36px)]"
+          aria-label={`Beranda ${siteConfig.name}`}
         >
-          {siteConfig.wordmark}
+          <Image
+            src={siteConfig.logo.src}
+            alt={siteConfig.logo.alt}
+            width={siteConfig.logo.width}
+            height={siteConfig.logo.height}
+            sizes="(max-width: 767px) 52px, 78px"
+            priority
+            draggable={false}
+            className="h-full w-auto"
+          />
         </Link>
 
         <nav className="pointer-events-auto hidden items-center gap-8 md:flex">

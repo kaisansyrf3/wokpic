@@ -9,7 +9,6 @@ import { baseAngle, clockwiseDelta, computeRingGeometry } from "@/animations/rin
 import { rotateRing, type RotationProxy } from "@/animations/ringRotate";
 import { clearPendingClone, expandToViewer } from "@/animations/expandToViewer";
 import { returnRing } from "@/animations/ringReturn";
-import { CenterLogo } from "@/components/home/CenterLogo";
 import { getTransitionNodes } from "@/components/transition/TransitionProvider";
 import gsap from "@/lib/gsap";
 import { useTransitionStore } from "@/store/transition";
@@ -28,7 +27,6 @@ export function RingGallery({ items }: RingGalleryProps) {
   const router = useRouter();
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
   const photoRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const geometryRef = useRef<RingGeometry | null>(null);
   const proxyRef = useRef<RotationProxy>({ rot: 0 });
@@ -74,15 +72,6 @@ export function RingGallery({ items }: RingGalleryProps) {
   const measure = useCallback(() => {
     const geometry = computeRingGeometry(window.innerWidth, window.innerHeight);
     geometryRef.current = geometry;
-
-    if (logoRef.current) {
-      gsap.set(logoRef.current, {
-        x: geometry.cx,
-        y: geometry.cy,
-        xPercent: -50,
-        yPercent: -50,
-      });
-    }
 
     applyLayout(proxyRef.current.rot);
   }, [applyLayout]);
@@ -270,7 +259,6 @@ export function RingGallery({ items }: RingGalleryProps) {
           />
         </button>
       ))}
-      <CenterLogo ref={logoRef} />
     </div>
   );
 }

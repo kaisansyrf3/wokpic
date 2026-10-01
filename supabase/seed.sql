@@ -51,7 +51,7 @@ begin
     delete from public.project_images where project_id = project_uuid;
 
     for i in 1..sp.photo_count loop
-      seed_key := 'ikai-' || sp.slug || '-' || i;
+      seed_key := 'wokai-' || sp.slug || '-' || i;
       insert into public.project_images (
         project_id, url, thumb_url, width, height, blur_data_url, is_cover, sort_order
       ) values (

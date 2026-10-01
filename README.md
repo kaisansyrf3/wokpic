@@ -1,4 +1,4 @@
-# IKAI — Website portofolio wedding photography
+# WOKAI PICTURE — Website portofolio wedding photography
 
 Situs portofolio satu-fotografer dengan galeri utama berupa **8 foto 4:3 landscape pada cincin
 elips** di sekeliling logo: klik satu foto → cincin berputar searah jarum jam → foto membesar
@@ -7,11 +7,11 @@ berputar kembali ke kiri ke posisi awal.
 
 Ganti nama merek, tagline, dan URL cukup di satu file: `src/config/site.ts`.
 
-Logo di tengah cincin adalah berkas **`public/logo.png`** (latar transparan). Yang ada di repo
-saat ini hanya placeholder bertuliskan "IKAI" — ganti dengan nama dan path yang sama, lalu
-sesuaikan dua angka ukuran (`logo.width` / `logo.height`) di `src/config/site.ts`. Ukuran
-tampilnya diatur oleh CSS (`clamp`), jadi berkas besar tidak akan merusak tata letak. Wordmark
-di Header tetap berupa teks dan tidak berubah.
+Logo merek adalah berkas **`public/logo.png`** (latar transparan) yang tampil di pojok kiri atas
+Header. Yang ada di repo saat ini hanya placeholder bertuliskan "WOKAI" — ganti dengan nama dan
+path yang sama, lalu sesuaikan dua angka ukuran (`logo.width` / `logo.height`) di
+`src/config/site.ts`. Tinggi tampilnya diatur oleh CSS (`clamp`) dan mengikuti rasio asli berkas,
+jadi berkas besar tidak akan merusak tata letak.
 
 > Referensi visual yang dipakai hanya sebagai acuan estetika. Tidak ada merek, logo, nama, foto,
 > maupun alur animasi situs lain yang disalin.
@@ -277,7 +277,7 @@ supabase/
 
 ## Asumsi yang diambil
 
-1. Nama placeholder `IKAI` dipakai di `src/config/site.ts`; ganti sekali, seluruh situs ikut.
+1. Nama merek `WOKAI PICTURE` dipakai di `src/config/site.ts`; ganti sekali, seluruh situs ikut.
 2. Rute admin dikelompokkan dalam `(panel)` agar `layout` guard hanya berlaku untuk dashboard;
    halaman login berada di luar kelompok itu.
 3. Navigasi `‹ ›` di viewer **melingkar** (dari foto terakhir kembali ke foto pertama).

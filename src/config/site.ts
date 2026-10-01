@@ -1,8 +1,7 @@
-const brand = "IKAI";
+const brand = "WOKAI PICTURE";
 
 export const siteConfig = {
   name: brand,
-  wordmark: brand,
   tagline: "Wedding Photography",
   description:
     "Portofolio fotografi pernikahan. Cerita yang direkam dengan cahaya, ketenangan, dan detail.",
