@@ -1,3 +1,5 @@
+import { MOBILE_BREAKPOINT } from "@/lib/viewport";
+
 export const TOP = -Math.PI / 2;
 export const TAU = Math.PI * 2;
 
@@ -43,7 +45,6 @@ const MOBILE = {
 
 /** Landscape tiles: width / height. */
 const TILE_RATIO = 4 / 3;
-const MOBILE_BREAKPOINT = 768;
 
 /**
  * Adjacent tiles sit TAU/8 apart, so the horizontal distance between the tile at

@@ -41,6 +41,9 @@ export default function RootLayout({
   return (
     <html lang="id" className={grotesk.variable}>
       <body className="bg-ink font-sans text-chalk antialiased">
+        {/* One shared backdrop: the landing and the viewer must not differ by a
+            single pixel while a photo flies between them. */}
+        <div className="dot-field pointer-events-none fixed inset-0" aria-hidden />
         <TransitionProvider>{children}</TransitionProvider>
       </body>
     </html>

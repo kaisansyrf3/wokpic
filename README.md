@@ -116,7 +116,7 @@ grep -rF "$GMAIL_APP_PASSWORD" .next/static || echo "bersih"
 | Rute | Isi |
 | --- | --- |
 | `/` | Cincin foto (hero). Tanpa scroll halaman; statik. |
-| `/works/[slug]` | Viewer layar-penuh: hanya foto, `‹ ›`, dan `X`. |
+| `/works/[slug]` | Viewer: satu foto 4:3 besar di tengah (bukan layar-penuh), `‹ ›`, `X` kiri atas, dan tombol `Hubungi Kami` di bawah. |
 | `/service` | Daftar paket aktif + harga. |
 | `/about` | Foto, bio, dan tautan media sosial dari `site_settings`. |
 | `/contact` | Form pesan (+ preselect paket lewat `?service=<slug>`). |
@@ -149,8 +149,19 @@ idle → rotating → expanding → viewing → closing → returning → idle
   detik, easing `power2.inOut`.
 - `TransitionProvider` (level root) memiliki satu klon foto tetap; morph ke viewer memakai klon
   itu sehingga tidak ada kedip antar-rute.
+- Besar dan posisi foto viewer dihitung satu kali oleh `getViewerFrameRect()`
+  (`src/lib/viewerFrame.ts`). Viewer memakai rect itu untuk layout dan `expandToViewer` memakai
+  rect yang sama sebagai tujuan animasi, jadi klon selalu mendarat tepat di bingkainya. Tile ring
+  dan bingkai viewer sama-sama 4:3, jadi klon membesar seragam tanpa berubah bentuk.
+- Latar (`dot-field`, dipasang sekali di root layout sebagai `fixed inset-0`) adalah sumber yang
+  sama untuk landing dan viewer — tidak ada kedip latar saat transisi masuk maupun keluar.
+- Setelah klon mendarat dan foto viewer ter-decode, klon dihapus lalu keempat kontrol memudar
+  masuk (0,4s).
 - `X` memicu fase `closing`: kontrol memudar (0,25s), lalu foto memudar (0,4s), baru pindah ke `/`.
   Tidak ada canvas, partikel, atau layar hitam di antara keduanya.
+- `Hubungi Kami` mereset store (`phase = idle`, `returning = false`, `delta = 0`,
+  `selectedSlug = null`) lalu memudar ke `/service`. Cincin tidak ikut berputar ketika pengunjung
+  nanti kembali ke landing.
 - Fase `returning` merender cincin pada `rot = delta` dalam keadaan tersembunyi, memunculkannya
   (0,5s), menahan 0,2s, lalu memutar balik ke kiri ke 0.
 - Buka `/works/[slug]` langsung (URL, refresh, Share) → delta dihitung dari posisi slug di hero,
@@ -172,12 +183,12 @@ src/
   animations/   ringLayout, ringRotate, ringReturn, expandToViewer, pageReveal
   app/
     (site)/     landing + /service, /about, /contact (chrome: Header/Footer)
-    (viewer)/   /works/[slug] layar-penuh
+    (viewer)/   /works/[slug] viewer 4:3
     admin/      login + (panel)/ dashboard, projects, hero, services, about, messages
     sitemap.ts  robots.ts  layout.tsx  globals.css
   components/   home/ layout/ transition/ viewer/ service/ ui/ admin/
   config/site.ts  nama merek, tagline, URL, tautan navigasi
-  lib/          auth, validation, email, imageJob, format, gsap, supabase/
+  lib/          auth, validation, email, imageJob, format, gsap, viewerFrame, viewport, supabase/
   middleware.ts penjaga /admin
   store/        mesin fase transisi (Zustand)
   types/        database.ts (hasil `npm run gen:types`) + content.ts
@@ -259,6 +270,16 @@ supabase/
     `/admin/projects` sebelum tayang.
 11. `NEXT_PUBLIC_SITE_URL` belum diisi di pengembangan, jadi `robots.txt`/`sitemap.xml` lokal
     menunjuk ke `localhost:3000`.
+12. Lebar tile cincin mobile berakhir di ±25% lebar layar (bukan 28% seperti panduan awal) karena
+    margin aman tepi layar dan logo di tengah; semua tile tetap persis 4:3 dan tidak saling menutup.
+13. `‹ ›` ditempatkan di luar bingkai hanya bila space-nya cukup (celah 24 px + tombol 44 px +
+    12 px dari tepi layar); selain itu — termasuk di mobile — tombol menumpang di tepi foto dengan
+    latar gelap.
+14. Tombol "Hubungi Kami" memudar bersama seluruh container viewer (0,3 s). Situs ini tidak punya
+    fade antar-halaman lain, jadi gaya itulah yang dipakai sebagai acuan.
+15. `dot-field` sekarang dipasang sekali di root layout sebagai `fixed inset-0`. Di halaman yang
+    bisa digulir polanya ikut diam (tidak ikut bergulir) — harganya kecil, dan berkat ini landing
+    dan viewer benar-benar memakai latar yang sama.
 
 ## Masalah yang sering muncul
 

@@ -1,3 +1,5 @@
 export default function ViewerLayout({ children }: { children: React.ReactNode }) {
-  return <div className="relative h-dvh w-full overflow-hidden bg-ink">{children}</div>;
+  // No background of its own: the shared dot backdrop from the root layout is
+  // what the visitor sees here, identical to the landing.
+  return <div className="relative h-dvh w-full overflow-hidden">{children}</div>;
 }

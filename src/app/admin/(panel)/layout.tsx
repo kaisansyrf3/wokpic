@@ -21,7 +21,7 @@ export default async function AdminPanelLayout({
   const [user, unread] = await Promise.all([requireAdminUser(), countUnreadMessages()]);
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-ink md:flex-row">
       <aside className="flex shrink-0 flex-col gap-6 border-b border-line p-5 md:h-dvh md:w-60 md:border-b-0 md:border-r md:p-6">
         <Link href="/admin" className="ui-label text-chalk">
           {siteConfig.name} · Admin

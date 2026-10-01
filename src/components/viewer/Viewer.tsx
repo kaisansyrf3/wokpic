@@ -6,19 +6,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import {
   CLOSE_CONTROLS_DURATION,
   CLOSE_PHOTO_DURATION,
+  CONTACT_FADE_DURATION,
+  CONTROLS_FADE_DURATION,
   CROSSFADE_DURATION,
   CROSSFADE_EASE,
   FADE_EASE,
 } from "@/animations/easings";
-import {
-  clearPendingClone,
-  loadDecodedImage,
-  resolvePhotoFit,
-  type PhotoFit,
-} from "@/animations/expandToViewer";
+import { clearPendingClone, loadDecodedImage } from "@/animations/expandToViewer";
 import { clockwiseDelta } from "@/animations/ringLayout";
 import { ViewerControls } from "@/components/viewer/ViewerControls";
 import gsap from "@/lib/gsap";
+import { getViewerFrameRect } from "@/lib/viewerFrame";
 import { useTransitionStore } from "@/store/transition";
 import type { ProjectPhoto } from "@/types/content";
 
@@ -38,20 +36,22 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
 
   const [front, setFront] = useState(0);
   const [back, setBack] = useState<number | null>(null);
-  const [fit, setFit] = useState<PhotoFit>("contain");
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const frontRef = useRef<HTMLImageElement>(null);
   const fadeTweenRef = useRef<gsap.core.Tween | null>(null);
   const indexRef = useRef(0);
   const firstPaintRef = useRef(true);
+  const leavingRef = useRef(false);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
 
   const total = photos.length;
+  const frame = getViewerFrameRect(viewport.width, viewport.height);
 
   useLayoutEffect(() => {
     const update = () =>
-      setFit(resolvePhotoFit(window.innerWidth, window.innerHeight));
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
     update();
 
     window.addEventListener("resize", update);
@@ -93,21 +93,44 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
     }
   }, [front, photos, total]);
 
-  const handleFrontLoad = useCallback(() => {
-    const element = frontRef.current;
+  const revealControls = useCallback(() => {
+    const element = containerRef.current?.querySelector("[data-viewer-controls]");
     if (!element) return;
 
-    if (firstPaintRef.current) {
-      firstPaintRef.current = false;
-      gsap.set(element, { opacity: 1 });
-      element
-        .decode()
-        .catch(() => undefined)
-        .then(() => {
-          requestAnimationFrame(() => clearPendingClone());
+    gsap.to(element, {
+      opacity: 1,
+      duration: CONTROLS_FADE_DURATION,
+      ease: FADE_EASE,
+    });
+  }, []);
+
+  // The clone is only removed once the viewer's own pixels are on screen, so
+  // the handover between the two never flashes.
+  const settleFirstPaint = useCallback(() => {
+    if (!firstPaintRef.current) return false;
+    firstPaintRef.current = false;
+
+    const element = frontRef.current;
+    if (element) gsap.set(element, { opacity: 1 });
+
+    const decoded = element?.decode() ?? Promise.resolve();
+    decoded
+      .catch(() => undefined)
+      .then(() => {
+        requestAnimationFrame(() => {
+          clearPendingClone();
+          revealControls();
         });
-      return;
-    }
+      });
+
+    return true;
+  }, [revealControls]);
+
+  const handleFrontLoad = useCallback(() => {
+    if (settleFirstPaint()) return;
+
+    const element = frontRef.current;
+    if (!element) return;
 
     fadeTweenRef.current?.kill();
     fadeTweenRef.current = gsap.fromTo(
@@ -120,7 +143,7 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
         onComplete: () => setBack(null),
       },
     );
-  }, []);
+  }, [settleFirstPaint]);
 
   // A cached image can finish before React attaches onLoad.
   useLayoutEffect(() => {
@@ -146,8 +169,9 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
 
   const handleClose = useCallback(() => {
     const store = useTransitionStore.getState();
-    if (store.phase !== "viewing") return;
+    if (store.phase !== "viewing" || leavingRef.current) return;
 
+    leavingRef.current = true;
     store.setPhase("closing");
     fadeTweenRef.current?.kill();
 
@@ -180,6 +204,29 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
         ease: FADE_EASE,
       }, CLOSE_CONTROLS_DURATION * 0.5);
     }
+  }, [router]);
+
+  const handleContact = useCallback(() => {
+    if (leavingRef.current) return;
+    leavingRef.current = true;
+
+    // Leave nothing behind: the next visit to the landing should show the ring
+    // at rest, not replay the return animation.
+    useTransitionStore.getState().reset();
+
+    const go = () => router.push("/service");
+    const container = containerRef.current;
+    if (!container) {
+      go();
+      return;
+    }
+
+    gsap.to(container, {
+      opacity: 0,
+      duration: CONTACT_FADE_DURATION,
+      ease: FADE_EASE,
+      onComplete: go,
+    });
   }, [router]);
 
   useEffect(() => {
@@ -217,6 +264,10 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
   const frontPhoto = photos[front];
   const backPhoto = back !== null ? photos[back] : null;
 
+  if (viewport.width === 0) {
+    return <div ref={containerRef} className="absolute inset-0" />;
+  }
+
   return (
     <div
       ref={containerRef}
@@ -224,35 +275,43 @@ export function Viewer({ slug, title, photos, heroIndex, heroCount }: ViewerProp
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {backPhoto ? (
+      <div
+        className="absolute overflow-hidden"
+        style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }}
+      >
+        {backPhoto ? (
+          <img
+            key={`back-${backPhoto.id}`}
+            src={backPhoto.url}
+            alt=""
+            aria-hidden
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-contain"
+          />
+        ) : null}
+
         <img
-          key={`back-${backPhoto.id}`}
-          src={backPhoto.url}
-          alt=""
-          aria-hidden
+          key={`front-${frontPhoto.id}`}
+          ref={frontRef}
+          src={frontPhoto.url}
+          alt={title}
           decoding="async"
           draggable={false}
-          className="absolute inset-0 h-full w-full"
-          style={{ objectFit: fit }}
+          onLoad={handleFrontLoad}
+          onError={settleFirstPaint}
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ opacity: 0 }}
         />
-      ) : null}
-
-      <img
-        key={`front-${frontPhoto.id}`}
-        ref={frontRef}
-        src={frontPhoto.url}
-        alt={title}
-        decoding="async"
-        draggable={false}
-        onLoad={handleFrontLoad}
-        className="absolute inset-0 h-full w-full"
-        style={{ objectFit: fit, opacity: 0 }}
-      />
+      </div>
 
       <ViewerControls
+        frame={frame}
+        viewportWidth={viewport.width}
         onPrev={() => navigate(-1)}
         onNext={() => navigate(1)}
         onClose={handleClose}
+        onContact={handleContact}
       />
     </div>
   );

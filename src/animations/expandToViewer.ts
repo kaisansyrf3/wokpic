@@ -1,45 +1,6 @@
 import gsap from "@/lib/gsap";
 import { EXPAND_EASE, EXPAND_DURATION, FADE_EASE } from "@/animations/easings";
-
-export type PhotoFit = "contain" | "cover";
-
-export type PhotoRect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-};
-
-/**
- * Desktop shows the whole frame; a narrow portrait viewport fills the screen
- * instead, matching the object-fit the viewer applies.
- */
-export function resolvePhotoFit(viewportWidth: number, viewportHeight: number): PhotoFit {
-  return viewportHeight > viewportWidth && viewportWidth < 768 ? "cover" : "contain";
-}
-
-export function computePhotoRect(
-  naturalWidth: number,
-  naturalHeight: number,
-  viewportWidth: number,
-  viewportHeight: number,
-): PhotoRect {
-  const fit = resolvePhotoFit(viewportWidth, viewportHeight);
-  const scale =
-    fit === "cover"
-      ? Math.max(viewportWidth / naturalWidth, viewportHeight / naturalHeight)
-      : Math.min(viewportWidth / naturalWidth, viewportHeight / naturalHeight);
-
-  const width = naturalWidth * scale;
-  const height = naturalHeight * scale;
-
-  return {
-    width,
-    height,
-    left: (viewportWidth - width) / 2,
-    top: (viewportHeight - height) / 2,
-  };
-}
+import { getViewerFrameRect } from "@/lib/viewerFrame";
 
 export function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -81,10 +42,6 @@ export function clearPendingClone() {
   pending = null;
 }
 
-export function hasPendingClone(): boolean {
-  return pending !== null;
-}
-
 export type ExpandOptions = {
   source: HTMLElement;
   url: string;
@@ -103,14 +60,11 @@ export async function expandToViewer({
   clearPendingClone();
 
   const startRect = source.getBoundingClientRect();
-  const image = await loadDecodedImage(url);
+  await loadDecodedImage(url);
 
-  const target = computePhotoRect(
-    image.naturalWidth,
-    image.naturalHeight,
-    window.innerWidth,
-    window.innerHeight,
-  );
+  // Both the clone and the viewer read the same function, so the clone lands
+  // exactly on the frame the photo will be shown in.
+  const target = getViewerFrameRect(window.innerWidth, window.innerHeight);
 
   const wrapper = document.createElement("div");
   wrapper.setAttribute("data-expand-clone", "");
@@ -132,7 +86,7 @@ export async function expandToViewer({
   clone.alt = "";
   clone.draggable = false;
   clone.decoding = "sync";
-  clone.style.cssText = "display:block;width:100%;height:100%;object-fit:cover;";
+  clone.style.cssText = "display:block;width:100%;height:100%;object-fit:contain;";
 
   wrapper.appendChild(clone);
   cloneLayer.appendChild(wrapper);
@@ -140,19 +94,27 @@ export async function expandToViewer({
   source.style.visibility = "hidden";
 
   const timeline = gsap.timeline({ onComplete: onArrived });
-  timeline.to(fadeOut.filter(Boolean) as HTMLElement[], {
-    opacity: 0,
-    duration: EXPAND_DURATION * 0.6,
-    ease: FADE_EASE,
-  }, 0);
-  timeline.to(wrapper, {
-    top: target.top,
-    left: target.left,
-    width: target.width,
-    height: target.height,
-    duration: EXPAND_DURATION,
-    ease: EXPAND_EASE,
-  }, 0);
+  timeline.to(
+    fadeOut.filter(Boolean) as HTMLElement[],
+    {
+      opacity: 0,
+      duration: EXPAND_DURATION * 0.6,
+      ease: FADE_EASE,
+    },
+    0,
+  );
+  timeline.to(
+    wrapper,
+    {
+      top: target.top,
+      left: target.left,
+      width: target.width,
+      height: target.height,
+      duration: EXPAND_DURATION,
+      ease: EXPAND_EASE,
+    },
+    0,
+  );
 
   pending = { wrapper, source, timeline };
 
