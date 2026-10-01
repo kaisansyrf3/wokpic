@@ -7,7 +7,7 @@ import { requireAdminUser } from "@/lib/auth";
 import { countUnreadMessages } from "@/lib/supabase/admin-queries";
 
 export const metadata: Metadata = {
-  title: `Admin - ${siteConfig.name}`,
+  // Each admin section titles itself, so no suffix is added here.
   robots: { index: false, follow: false },
 };
 

@@ -337,6 +337,10 @@ supabase/
 17. Nomor WhatsApp hanya satu per situs (`site_settings.whatsapp_number`), tidak per paket, dan
     seedisinya `6281200000000` — nomor palsu yang jelas-jelas palsu. Tautan `wa.me` selalu dibangun
     dari kolom itu, jadi tidak ada nomor yang di-hardcode di komponen.
+18. Judul tab browser tidak pernah menyertakan nama merek: root layout memakai
+    `title: { default: "WOKAI PICTURE", template: "%s" }` sehingga tiap halaman menulis judulnya
+    sendiri (`Layanan`, `Kontak`, `Tentang`, judul project, atau nama bagian admin) tanpa embel-embel.
+    Halaman 404 memakai "Halaman tidak ditemukan". Tidak ada `—` atau `–` di dalam judul mana pun.
 
 ## Masalah yang sering muncul
 

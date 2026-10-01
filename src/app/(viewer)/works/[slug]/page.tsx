@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: ViewerPageProps): Promise<Met
     description: project.description ?? siteConfig.description,
     openGraph: cover
       ? {
-          title: `${project.title} — ${siteConfig.name}`,
+          title: project.title,
           description: project.description ?? siteConfig.description,
           images: [
             {

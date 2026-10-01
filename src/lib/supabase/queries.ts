@@ -216,9 +216,11 @@ export async function getWhatsAppNumber(): Promise<string | null> {
 export async function getFooterLinks(): Promise<FooterLinks> {
   const supabase = publicClient();
 
+  // `*` rather than a column list: the chrome must keep rendering even on a database where
+  // `whatsapp_number` does not exist yet, and a failed read here would break every page.
   const { data, error } = await supabase
     .from("site_settings")
-    .select("social_links, whatsapp_number")
+    .select("*")
     .eq("id", 1)
     .maybeSingle();
 

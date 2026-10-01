@@ -15,13 +15,11 @@ const grotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: {
-    default: `${siteConfig.name} — ${siteConfig.tagline}`,
-    template: `%s — ${siteConfig.name}`,
-  },
+  // Every route owns its own tab title, so the template never adds a suffix.
+  title: { default: siteConfig.name, template: "%s" },
   description: siteConfig.description,
   openGraph: {
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
+    title: `${siteConfig.name}: ${siteConfig.tagline}`,
     description: siteConfig.description,
     siteName: siteConfig.name,
     locale: "id_ID",

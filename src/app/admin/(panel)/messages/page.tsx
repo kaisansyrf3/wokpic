@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { countUnreadMessages, listMessages } from "@/lib/supabase/admin-queries";
 import { formatDateID } from "@/lib/utils";
+
+export const metadata: Metadata = { title: "Messages" };
 
 function EmailBadge({ sent }: { sent: boolean }) {
   return (

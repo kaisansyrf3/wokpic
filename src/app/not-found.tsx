@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = { title: "Halaman tidak ditemukan" };
 
 export default function NotFound() {
   return (

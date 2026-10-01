@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { MessageDetail } from "@/components/admin/MessageDetail";
 import { requireAdminUser } from "@/lib/auth";
 import { getMessage, markMessageRead } from "@/lib/supabase/admin-queries";
+
+export const metadata: Metadata = { title: "Messages" };
 
 export default async function MessageDetailPage({
   params,

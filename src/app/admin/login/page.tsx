@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: `Masuk Admin - ${siteConfig.name}`,
+  title: "Login",
   robots: { index: false, follow: false },
 };
 

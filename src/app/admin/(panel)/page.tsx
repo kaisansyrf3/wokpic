@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getAdminSummary } from "@/lib/supabase/admin-queries";
+
+export const metadata: Metadata = { title: "Ringkasan" };
 
 export default async function AdminDashboardPage() {
   const summary = await getAdminSummary();

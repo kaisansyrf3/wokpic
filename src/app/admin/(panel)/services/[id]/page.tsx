@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ServiceEditor } from "@/components/admin/ServiceEditor";
@@ -6,6 +7,8 @@ import {
   getServiceForEdit,
   listServiceCategoriesAdmin,
 } from "@/lib/supabase/admin-queries";
+
+export const metadata: Metadata = { title: "Services" };
 
 export default async function ServiceEditPage({
   params,

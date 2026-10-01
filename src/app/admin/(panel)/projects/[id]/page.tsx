@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProjectEditor } from "@/components/admin/ProjectEditor";
 import { requireAdminUser } from "@/lib/auth";
 import { getProjectForEdit } from "@/lib/supabase/admin-queries";
+
+export const metadata: Metadata = { title: "Projects" };
 
 export default async function ProjectEditPage({
   params,
