@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const isLanding = pathname === "/";
 
   return (
@@ -35,16 +36,23 @@ export function Header() {
           className="pointer-events-auto flex h-6 items-center md:h-[clamp(24px,2.2vw,36px)]"
           aria-label={`Beranda ${siteConfig.name}`}
         >
-          <Image
-            src={siteConfig.logo.src}
-            alt={siteConfig.logo.alt}
-            width={siteConfig.logo.width}
-            height={siteConfig.logo.height}
-            sizes="(max-width: 767px) 52px, 78px"
-            priority
-            draggable={false}
-            className="h-full w-auto"
-          />
+          {logoFailed ? (
+            <span className="text-sm font-light uppercase tracking-[0.3em] text-chalk md:text-base">
+              {siteConfig.name}
+            </span>
+          ) : (
+            <Image
+              src={siteConfig.logo.src}
+              alt={siteConfig.logo.alt}
+              width={siteConfig.logo.width}
+              height={siteConfig.logo.height}
+              sizes="(max-width: 767px) 52px, 78px"
+              priority
+              draggable={false}
+              onError={() => setLogoFailed(true)}
+              className="h-full w-auto"
+            />
+          )}
         </Link>
 
         <nav className="pointer-events-auto hidden items-center gap-8 md:flex">

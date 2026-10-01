@@ -9,7 +9,7 @@ export const siteConfig = {
   url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, ""),
   locale: "id_ID",
   timezone: "Asia/Jakarta",
-  // Replace public/logo.png (transparent) and these two intrinsic pixel sizes.
+  // Put the real mark at public/logo.png (transparent) and match these two intrinsic pixel sizes.
   logo: { src: "/logo.png", alt: brand, width: 196, height: 90 },
 } as const;
 

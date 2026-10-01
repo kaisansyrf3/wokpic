@@ -7,11 +7,13 @@ berputar kembali ke kiri ke posisi awal.
 
 Ganti nama merek, tagline, dan URL cukup di satu file: `src/config/site.ts`.
 
-Logo merek adalah berkas **`public/logo.png`** (latar transparan) yang tampil di pojok kiri atas
-Header. Yang ada di repo saat ini hanya placeholder bertuliskan "WOKAI" — ganti dengan nama dan
-path yang sama, lalu sesuaikan dua angka ukuran (`logo.width` / `logo.height`) di
-`src/config/site.ts`. Tinggi tampilnya diatur oleh CSS (`clamp`) dan mengikuti rasio asli berkas,
-jadi berkas besar tidak akan merusak tata letak.
+Logo merek tampil di pojok kiri atas Header sebagai berkas **`public/logo.png`** (latar
+transparan). Berkas itu SENGAJA tidak ada di repo: tidak ada placeholder palsu yang menyamar
+sebagai logo. Sampai kamu menaruh gambar asli di path tersebut, Header menampilkan teks
+`WOKAI PICTURE` (fallback lewat `onError`). Setelah gambar ada, letakkan di `public/logo.png`
+dan sesuaikan dua angka ukuran (`logo.width` / `logo.height`) di `src/config/site.ts` mengikuti
+rasio asli berkas. Tinggi tampilnya diatur CSS (`clamp`), jadi berkas besar tidak merusak tata
+letak.
 
 > Referensi visual yang dipakai hanya sebagai acuan estetika. Tidak ada merek, logo, nama, foto,
 > maupun alur animasi situs lain yang disalin.
@@ -216,7 +218,7 @@ src/
   store/        mesin fase transisi (Zustand)
   types/        database.ts (hasil `npm run gen:types`) + content.ts
 public/
-  logo.png                                    logo merek untuk Header (latar transparan)
+  logo.png                                    OPSIONAL: logo merek untuk Header; tanpa berkas ini Header pakai teks
 supabase/
   migrations/20261001000000_init_schema.sql   tabel, RLS, bucket, RPC
   migrations/20261001000001_service_categories.sql  kategori paket + RPC paket
