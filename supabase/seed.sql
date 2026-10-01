@@ -83,35 +83,69 @@ where sp.ord <= 8
 order by sp.ord;
 
 -- ---------------------------------------------------------------------------
--- Services
+-- Services (one row per package; order lives in service_category_links)
 -- ---------------------------------------------------------------------------
 
+delete from public.service_category_links;
 delete from public.services;
 
-insert into public.services (slug, name, tagline, price, features, is_active, sort_order) values
+insert into public.services (slug, name, tagline, price, features, is_active) values
   ('prewedding', 'Prewedding', 'Satu hari, satu cerita sebelum hari H.', 3500000,
    '["Sesi foto 4 jam di 1 lokasi", "1 fotografer + 1 asisten", "40 foto terpilih diedit", "Galeri online 6 bulan", "Konsultasi konsep & wardrobe"]'::jsonb,
-   true, 0),
+   true),
 
   ('akad-nikah', 'Akad Nikah', 'Momen ijab kabul yang tidak terulang.', 4500000,
    '["Liputan 5 jam", "2 fotografer", "80 foto terpilih diedit", "Album kolase 20x30", "Galeri online 12 bulan", "Foto keluarga formal"]'::jsonb,
-   true, 1),
+   true),
 
   ('resepsi', 'Resepsi', 'Perayaan, tawa, dan semua yang hadir di antaranya.', 6000000,
    '["Liputan 6 jam", "2 fotografer", "120 foto terpilih diedit", "Album kolase 20x30", "Galeri online 12 bulan", "Dokumentasi dekorasi & detail"]'::jsonb,
-   true, 2),
+   true),
 
   ('akad-resepsi', 'Akad + Resepsi', 'Dua momen penting dalam satu hari penuh.', 9500000,
    '["Liputan 10 jam", "2 fotografer + 1 asisten", "200 foto terpilih diedit", "Album eksklusif 30x40", "Galeri online 24 bulan", "Sesi foto keluarga lengkap", "Cuplikan video 60 detik"]'::jsonb,
-   true, 3),
+   true),
 
   ('full-day-wedding', 'Full Day Wedding', 'Dari persiapan subuh sampai pesta selesai.', 14000000,
    '["Liputan 14 jam", "3 fotografer", "300 foto terpilih diedit", "Album eksklusif 30x40 + 2 album mini", "Galeri online 24 bulan", "Persiapan pengantin (getting ready)", "Video sinematik 3 menit"]'::jsonb,
-   true, 4),
+   true),
 
   ('premium-bundle', 'Premium Bundle', 'Paket lengkap dengan tim dan arsip jangka panjang.', 22500000,
    '["Liputan 2 hari (prewedding + pernikahan)", "4 fotografer + 1 videografer", "500 foto terpilih diedit", "Album premium 40x50 + box kayu", "Video sinematik 5 menit + teaser 60 detik", "Galeri online tanpa batas waktu", "Cetak kanvas 60x90", "Sesi foto keluarga besar"]'::jsonb,
-   true, 5);
+   true),
+
+  ('graduation-solo', 'Graduation Solo', 'Satu orang, satu cerita, satu sesi singkat.', 1500000,
+   '["Sesi foto 2 jam di 1 lokasi", "1 fotografer", "25 foto terpilih diedit", "Galeri online 6 bulan", "Konsultasi konsep & wardrobe"]'::jsonb,
+   true),
+
+  ('graduation-group', 'Graduation Group', 'Sesi bareng teman-teman seangkatannya.', 2750000,
+   '["Sesi foto 3 jam di 1 lokasi", "1 fotografer + 1 asisten", "60 foto terpilih diedit", "Galeri online 6 bulan", "Foto kelompok & personal", "Cetak 20x30 dua lembar"]'::jsonb,
+   true);
+
+-- Package placement per category (the order inside each category).
+create temp table seed_service_category (
+  service_slug text,
+  category_slug text,
+  ord int
+) on commit drop;
+
+insert into seed_service_category (service_slug, category_slug, ord) values
+  ('prewedding',       'wedding',      0),
+  ('akad-nikah',       'wedding',      1),
+  ('resepsi',          'wedding',      2),
+  ('akad-resepsi',     'wedding',      3),
+  ('full-day-wedding', 'wedding',      4),
+  ('premium-bundle',   'wedding',      5),
+  ('prewedding',       'prewedding',   0),
+  ('premium-bundle',   'prewedding',   1),
+  ('graduation-solo',  'graduation',   0),
+  ('graduation-group', 'graduation',   1);
+
+insert into public.service_category_links (service_id, category_id, sort_order)
+select s.id, c.id, x.ord
+from seed_service_category x
+join public.services s on s.slug = x.service_slug
+join public.service_categories c on c.slug = x.category_slug;
 
 -- ---------------------------------------------------------------------------
 -- Site settings

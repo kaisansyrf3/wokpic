@@ -1,5 +1,6 @@
 /**
- * Hand-written to mirror supabase/migrations/20261001000000_init_schema.sql.
+ * Hand-written to mirror supabase/migrations/20261001000000_init_schema.sql and
+ * 20261001000001_service_categories.sql.
  * Regenerate with `supabase gen types typescript` once a project is linked
  * (see README) and commit the result over this file.
  */
@@ -123,7 +124,6 @@ export type Database = {
           price: number;
           features: Json;
           is_active: boolean;
-          sort_order: number;
           created_at: string | null;
         };
         Insert: {
@@ -134,7 +134,6 @@ export type Database = {
           price: number;
           features?: Json;
           is_active?: boolean;
-          sort_order?: number;
           created_at?: string | null;
         };
         Update: {
@@ -145,10 +144,63 @@ export type Database = {
           price?: number;
           features?: Json;
           is_active?: boolean;
-          sort_order?: number;
           created_at?: string | null;
         };
         Relationships: [];
+      };
+      service_categories: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      service_category_links: {
+        Row: {
+          service_id: string;
+          category_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          service_id: string;
+          category_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          service_id?: string;
+          category_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_category_links_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_category_links_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "service_categories";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       messages: {
         Row: {
@@ -158,6 +210,7 @@ export type Database = {
           phone: string | null;
           service_id: string | null;
           service_name: string | null;
+          category_name: string | null;
           body: string;
           ip: string | null;
           email_sent: boolean;
@@ -171,6 +224,7 @@ export type Database = {
           phone?: string | null;
           service_id?: string | null;
           service_name?: string | null;
+          category_name?: string | null;
           body: string;
           ip?: string | null;
           email_sent?: boolean;
@@ -184,6 +238,7 @@ export type Database = {
           phone?: string | null;
           service_id?: string | null;
           service_name?: string | null;
+          category_name?: string | null;
           body?: string;
           ip?: string | null;
           email_sent?: boolean;
@@ -248,8 +303,21 @@ export type Database = {
         Args: { target_project_id: string; image_ids: string[] };
         Returns: undefined;
       };
-      set_service_order: {
-        Args: { service_ids: string[] };
+      save_service: {
+        Args: {
+          target_id: string | null;
+          service_slug: string;
+          service_name: string;
+          service_tagline: string | null;
+          service_price: number;
+          service_features: Json;
+          service_is_active: boolean;
+          category_slugs: string[];
+        };
+        Returns: string;
+      };
+      set_service_category_order: {
+        Args: { category_slug: string; service_ids: string[] };
         Returns: undefined;
       };
     };

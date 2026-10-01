@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { ContactForm } from "@/app/(site)/contact/ContactForm";
 import { Reveal } from "@/components/ui/Reveal";
-import { getActiveServices } from "@/lib/supabase/queries";
+import { getActiveServices, getServiceCategoryNames } from "@/lib/supabase/queries";
 
 // Nodemailer only runs on the Node.js runtime, and the segment owns that choice.
 export const runtime = "nodejs";
@@ -16,12 +16,16 @@ export const metadata: Metadata = {
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ service?: string }>;
+  searchParams: Promise<{ service?: string; category?: string }>;
 }) {
-  const [{ service }, services] = await Promise.all([searchParams, getActiveServices()]);
+  const [{ service, category }, [services, categories]] = await Promise.all([
+    searchParams,
+    Promise.all([getActiveServices(), getServiceCategoryNames()]),
+  ]);
 
-  // A ?service= slug that no longer exists is ignored rather than an error.
+  // A ?service= or ?category= that no longer exists is ignored rather than an error.
   const selected = services.find((entry) => entry.slug === service)?.slug ?? "";
+  const selectedCategory = categories.find((entry) => entry.slug === category)?.slug ?? "";
 
   return (
     <div className="mx-auto max-w-3xl px-5 pb-20 md:px-10">
@@ -42,6 +46,7 @@ export default async function ContactPage({
           <ContactForm
             services={services.map((service) => ({ slug: service.slug, name: service.name }))}
             initialService={selected}
+            initialCategory={selectedCategory}
           />
         </div>
       </Reveal>

@@ -12,10 +12,20 @@ export type ServiceCardData = {
   features: string[];
 };
 
-export function ServiceCard({ service, index }: { service: ServiceCardData; index: number }) {
+export function ServiceCard({
+  service,
+  index,
+  categorySlug,
+}: {
+  service: ServiceCardData;
+  index: number;
+  categorySlug: string;
+}) {
+  const href = `/contact?service=${encodeURIComponent(service.slug)}&category=${encodeURIComponent(categorySlug)}`;
+
   return (
     <article
-      data-reveal
+      data-card
       className="flex flex-col border border-line bg-ink-soft/40 p-6 md:p-7"
       aria-label={service.name}
     >
@@ -41,7 +51,7 @@ export function ServiceCard({ service, index }: { service: ServiceCardData; inde
       ) : null}
 
       <Link
-        href={`/contact?service=${encodeURIComponent(service.slug)}`}
+        href={href}
         className="ui-label mt-6 inline-flex items-center justify-between border border-line px-4 py-3 text-center uppercase tracking-widest transition-colors hover:border-chalk hover:text-chalk"
       >
         Pilih paket

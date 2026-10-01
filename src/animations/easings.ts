@@ -13,3 +13,5 @@ export const CONTROLS_FADE_DURATION = 0.4;
 export const CONTACT_FADE_DURATION = 0.3;
 export const RETURN_FADE_DURATION = 0.5;
 export const RETURN_HOLD = 0.2;
+export const TAB_EXIT_DURATION = 0.2;
+export const TAB_ENTER_DURATION = 0.45;

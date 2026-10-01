@@ -20,6 +20,7 @@ export type ContactValues = {
   email: string;
   phone: string;
   service: string;
+  category: string;
   body: string;
 };
 
@@ -30,7 +31,14 @@ export type ContactFormState = {
   errors?: Partial<Record<ContactField, string>>;
 };
 
-const EMPTY: ContactValues = { name: "", email: "", phone: "", service: "", body: "" };
+const EMPTY: ContactValues = {
+  name: "",
+  email: "",
+  phone: "",
+  service: "",
+  category: "",
+  body: "",
+};
 
 const SUCCESS: ContactFormState = {
   ok: true,
@@ -53,6 +61,7 @@ function readValues(formData: FormData): ContactValues {
     email: fieldValue(formData, "email"),
     phone: fieldValue(formData, "phone"),
     service: fieldValue(formData, "service"),
+    category: fieldValue(formData, "category"),
     body: fieldValue(formData, "body"),
   };
 }
@@ -79,6 +88,7 @@ export async function sendMessage(
     email: values.email,
     phone: values.phone,
     service_slug: values.service,
+    category_slug: values.category,
     body: values.body,
   };
 
@@ -136,6 +146,18 @@ export async function sendMessage(
     }
   }
 
+  // The category slug also comes from the URL: an unknown one is ignored, and the
+  // name is stored as a snapshot so the message keeps it even if packages move.
+  const categoryName = data.category_slug
+    ? (
+        await supabase
+          .from("service_categories")
+          .select("name")
+          .eq("slug", data.category_slug)
+          .maybeSingle()
+      ).data?.name ?? null
+    : null;
+
   const { data: stored, error: insertError } = await supabase
     .from("messages")
     .insert({
@@ -143,6 +165,7 @@ export async function sendMessage(
       email: data.email,
       phone: data.phone || null,
       service_name: serviceName,
+      category_name: categoryName,
       body: data.body,
       ip,
     })
@@ -162,6 +185,7 @@ export async function sendMessage(
     email: data.email,
     phone: data.phone || null,
     serviceName,
+    categoryName,
     body: data.body,
     createdAt: new Date(stored.created_at ?? Date.now()),
   });

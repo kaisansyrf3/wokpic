@@ -47,8 +47,10 @@ npm run dev                  # http://localhost:3000
 ### 1. Skema database + RLS + Storage
 
 Opsi A (paling mudah, lewat Dashboard Supabase):
- buka **SQL Editor** → paste isi `supabase/migrations/20261001000000_init_schema.sql` → Run.
- Migration ini membuat tabel, policy RLS, bucket `portfolio` & `site`, dan empat RPC admin.
+  buka **SQL Editor** → paste isi `supabase/migrations/20261001000000_init_schema.sql` → Run,
+ lalu ulangi untuk `supabase/migrations/20261001000001_service_categories.sql`.
+ Migration pertama membuat tabel, policy RLS, bucket `portfolio` & `site`, dan empat RPC admin;
+ yang kedua menambahkan kategori paket plus RPC `save_service` dan `set_service_category_order`.
 
 Opsi B (lewat CLI, sekaligus memasang seed demo):
 
@@ -59,8 +61,9 @@ npx supabase db push      # menerapkan migration
 # atau: npx supabase db reset   (hanya jika project masih benar-benar kosong)
 ```
 
-`supabase/seed.sql` mengisi 9 project dengan foto placeholder `picsum.photos`, 6 paket jasa,
-8 slot hero, dan `site_settings`. Kontennya sengaja tempelan — ganti lewat `/admin`.
+`supabase/seed.sql` mengisi 9 project dengan foto placeholder `picsum.photos` 4:3, 8 paket jasa
+yang tersebar di tiga kategori (satu paket muncul di dua kategori), 8 slot hero, dan
+`site_settings`. Kontennya sengaja tempelan — ganti lewat `/admin`.
 
 ### 2. Membuat akun admin
 
@@ -123,9 +126,9 @@ grep -rF "$GMAIL_APP_PASSWORD" .next/static || echo "bersih"
 | --- | --- |
 | `/` | Cincin foto (hero). Tanpa scroll halaman; statik. |
 | `/works/[slug]` | Viewer: satu foto 4:3 besar di tengah (bukan layar-penuh), `‹ ›`, `X` kiri atas, dan tombol `Hubungi Kami` di bawah. |
-| `/service` | Daftar paket aktif + harga. |
+| `/service` | Paket aktif dalam tiga tab kategori (`Wedding`, `Pre Wedding`, `Graduation`); ganti tab tanpa reload, URL ikut `?category=<slug>`. |
 | `/about` | Foto, bio, dan tautan media sosial dari `site_settings`. |
-| `/contact` | Form pesan (+ preselect paket lewat `?service=<slug>`). |
+| `/contact` | Form pesan (+ preselect paket lewat `?service=<slug>` dan kategori lewat `?category=<slug>`). |
 | `/sitemap.xml`, `/robots.txt` | Di-generate dari database (`src/app/sitemap.ts`, `robots.ts`). |
 
 ## Panel admin
@@ -133,10 +136,24 @@ grep -rF "$GMAIL_APP_PASSWORD" .next/static || echo "bersih"
 Semua rute `/admin/*` dijaga dua lapis: `src/middleware.ts` menolak non-admin, dan RLS menolak
 tulisan dari role anon. Halaman: dashboard (peringatan hero ≠ 8 / project tanpa cover),
 `projects` + editor (upload, cover, urutan, publish), `hero` (atur tepat 8 project),
-`services` + editor (paket & fitur), `about` (profil + media sosial), `messages` (kotak masuk).
+`services` + editor (paket, fitur, dan kategori), `about` (profil + media sosial), `messages` (kotak masuk).
 
 Tulis multi-baris selalu lewat RPC `security definer` agar tidak setengah jadi:
-`set_hero_items`, `set_project_cover`, `set_project_image_order`, `set_service_order`.
+`set_hero_items`, `set_project_cover`, `set_project_image_order`, `save_service`,
+`set_service_category_order`.
+
+### Kategori paket
+
+Ada tiga kategori tetap: `wedding`, `prewedding`, `graduation`. Satu baris di `services` = satu
+paket; tabel `service_category_links` yang menentukan di kategori mana paket tampil dan di urutan
+berapa. Karena itu:
+
+- **Nama kategori tidak punya halaman admin.** Ubah lewat SQL, contoh:
+  `update public.service_categories set name = 'Engagement' where slug = 'prewedding';`
+  (slug dipakai di URL `/service?category=` dan sebaiknya jangan diubah).
+- Menambah atau menghapus kategori juga lewat SQL di tabel yang sama.
+- Urutan paket per kategori diatur di `/admin/services` dengan menyeret di tab kategori itu saja;
+  tab `Semua` hanya untuk melihat.
 
 ---
 
@@ -202,6 +219,7 @@ public/
   logo.png                                    gambar logo di tengah ring
 supabase/
   migrations/20261001000000_init_schema.sql   tabel, RLS, bucket, RPC
+  migrations/20261001000001_service_categories.sql  kategori paket + RPC paket
   seed.sql                                    konten demo
 ```
 
@@ -263,12 +281,14 @@ supabase/
 2. Rute admin dikelompokkan dalam `(panel)` agar `layout` guard hanya berlaku untuk dashboard;
    halaman login berada di luar kelompok itu.
 3. Navigasi `‹ ›` di viewer **melingkar** (dari foto terakhir kembali ke foto pertama).
-4. Landing, `/service`, dan `/about` di-prerender statik; setiap aksi admin memanggil
-   `revalidatePath` sehingga perubahan tampil tanpa rebuild. `/contact` selalu dinamik.
+4. Landing dan `/about` di-prerender statik; setiap aksi admin memanggil `revalidatePath`
+   sehingga perubahan tampil tanpa rebuild. `/service` dan `/contact` dinamik karena membaca
+   parameter URL (`?category=`, `?service=`).
 5. Sumber IP untuk rate limit adalah header proxy; di localhost nilainya `::1` sehingga semua
    percobaan lokal berbagi kuota yang sama.
-6. Paket yang dipilih di `?service=` hanya divalidasi saat submit; slug asing dianggap "tidak
-   memilih paket" dan pesannya tetap masuk.
+6. Paket di `?service=` dan kategori di `?category=` hanya divalidasi saat submit; slug asing
+   diabaikan (pesan dianggap "belum memilih paket"/tanpa kategori) dan pesannya tetap masuk.
+   Nama kategori disimpan sebagai snapshot di `messages.category_name`.
 7. Foto diproses di browser menjadi dua versi: `large` 2000 px (maks 1,5 MB) dan `thumb` 600 px
    (maks 250 KB) berupa WebP (fallback JPEG), plus LQIP blur ~20 px untuk placeholder.
 8. Harga disimpan sebagai integer Rupiah dan ditampilkan dengan `formatRupiah`; tidak ada

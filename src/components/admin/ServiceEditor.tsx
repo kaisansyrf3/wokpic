@@ -8,9 +8,11 @@ import { FlashMessage, useFlash } from "@/components/admin/Flash";
 import { Sortable, SortableItem } from "@/components/admin/Sortable";
 import { updateService, type ServiceDraft } from "@/app/admin/(panel)/services/actions";
 import { formatRupiah } from "@/lib/format";
-import { slugify } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
 
 type FeatureRow = { id: string; text: string };
+
+type Category = { slug: string; name: string };
 
 type Service = {
   id: string;
@@ -28,9 +30,13 @@ function toRows(features: string[]): FeatureRow[] {
 
 export function ServiceEditor({
   service,
+  categories,
+  initialCategorySlugs,
   publicPath,
 }: {
   service: Service;
+  categories: Category[];
+  initialCategorySlugs: string[];
   publicPath: string | null;
 }) {
   const router = useRouter();
@@ -43,6 +49,8 @@ export function ServiceEditor({
   const [price, setPrice] = useState(String(service.price));
   const [rows, setRows] = useState<FeatureRow[]>(() => toRows(service.features));
   const [isActive, setIsActive] = useState(service.is_active);
+  const [categorySlugs, setCategorySlugs] = useState<string[]>(initialCategorySlugs);
+  const [categoryError, setCategoryError] = useState(false);
   const [pending, setPending] = useState(false);
 
   const draft: ServiceDraft = {
@@ -52,9 +60,23 @@ export function ServiceEditor({
     price: Number.parseInt(price, 10) || 0,
     features: rows.map((row) => row.text),
     is_active: isActive,
+    categorySlugs,
+  };
+
+  const toggleCategory = (slugValue: string) => {
+    setCategorySlugs((current) =>
+      current.includes(slugValue)
+        ? current.filter((entry) => entry !== slugValue)
+        : [...current, slugValue],
+    );
+    setCategoryError(false);
   };
 
   const save = async () => {
+    if (categorySlugs.length === 0) {
+      setCategoryError(true);
+      return;
+    }
     setPending(true);
     await run(updateService(service.id, draft));
     setPending(false);
@@ -148,6 +170,40 @@ export function ServiceEditor({
           />
           Tampilkan paket ini di situs
         </label>
+
+        <fieldset className="space-y-2 border-t border-line pt-4">
+          <legend className="ui-label text-ash">Kategori</legend>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => {
+              const checked = categorySlugs.includes(category.slug);
+              return (
+                <label
+                  key={category.slug}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 border px-3 py-2 text-sm",
+                    checked ? "border-chalk text-chalk" : "border-line text-ash",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleCategory(category.slug)}
+                    className="h-4 w-4 accent-white"
+                  />
+                  {category.name}
+                </label>
+              );
+            })}
+          </div>
+          {categoryError ? (
+            <p className="text-xs text-red-200">Pilih minimal satu kategori.</p>
+          ) : (
+            <p className="text-xs text-ash">
+              Paket bisa tampil di lebih dari satu kategori. Mencentang kategori baru menempatkannya
+              di urutan paling akhir kategori itu.
+            </p>
+          )}
+        </fieldset>
       </section>
 
       <section className="admin-card space-y-4 p-5">

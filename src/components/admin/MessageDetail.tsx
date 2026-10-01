@@ -16,6 +16,7 @@ type Message = {
   email: string;
   phone: string | null;
   service_name: string | null;
+  category_name: string | null;
   body: string;
   ip: string | null;
   email_sent: boolean;
@@ -96,6 +97,7 @@ export function MessageDetail({ message }: { message: Message }) {
         <Field label="Email" value={message.email} />
         <Field label="Telepon / WhatsApp" value={message.phone} />
         <Field label="Paket yang dipilih" value={message.service_name ?? "Konsultasi dulu"} />
+        <Field label="Kategori asal" value={message.category_name} />
         <Field label="Alamat IP" value={message.ip} />
       </section>
 

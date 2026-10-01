@@ -9,6 +9,7 @@ export type ContactEmailInput = {
   email: string;
   phone: string | null;
   serviceName: string | null;
+  categoryName: string | null;
   body: string;
   createdAt: Date;
 };
@@ -80,6 +81,7 @@ function buildHtml(message: ContactEmailInput): string {
   row("Email", `<a href="mailto:${encodeURIComponent(message.email)}">${escapeHtml(message.email)}</a>`);
   row("Telepon/WhatsApp", message.phone ? escapeHtml(message.phone) : null);
   row("Paket", message.serviceName ? escapeHtml(message.serviceName) : "Belum tahu, ingin konsultasi dulu");
+  row("Kategori", message.categoryName ? escapeHtml(message.categoryName) : null);
   row("Waktu", escapeHtml(formatMoment(message.createdAt)) + " WIB");
   row("Pesan", lineBreaks(message.body));
 
@@ -102,6 +104,7 @@ function buildText(message: ContactEmailInput): string {
     `Email   : ${message.email}`,
     `Telepon : ${message.phone ?? "-"}`,
     `Paket   : ${message.serviceName ?? "Belum tahu, ingin konsultasi dulu"}`,
+    ...(message.categoryName ? [`Kategori: ${message.categoryName}`] : []),
     `Waktu   : ${formatMoment(message.createdAt)} WIB`,
     "",
     "Pesan:",

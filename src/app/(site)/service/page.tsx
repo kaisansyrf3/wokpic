@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
 
 import { Reveal } from "@/components/ui/Reveal";
-import { ServiceCard } from "@/components/service/ServiceCard";
-import { getActiveServices } from "@/lib/supabase/queries";
+import { ServiceBrowser } from "@/components/service/ServiceBrowser";
+import { getServiceCatalog } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: "Layanan",
   description:
-    "Paket fotografi pernikahan: cakupan, rincian jasa, dan harga mulai. Pilih paket lalu lanjut ke formulir kontak.",
+    "Paket fotografi pernikahan, prewedding, dan graduation: cakupan, rincian jasa, dan harga mulai. Pilih paket lalu lanjut ke formulir kontak.",
 };
 
-export default async function ServicePage() {
-  const services = await getActiveServices();
+export default async function ServicePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const [{ category }, catalog] = await Promise.all([searchParams, getServiceCatalog()]);
+
+  // An unknown ?category= falls back to the first tab rather than erroring.
+  const requested = catalog.categories.find((entry) => entry.slug === category);
+  const initialCategory = requested?.slug ?? catalog.categories[0]?.slug ?? "";
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-20 md:px-10">
@@ -28,17 +36,25 @@ export default async function ServicePage() {
         </p>
       </Reveal>
 
-      {services.length === 0 ? (
+      {catalog.services.length === 0 || catalog.categories.length === 0 ? (
         <p className="border border-line bg-ink-soft/40 px-6 py-14 text-center text-sm text-ash">
           Daftar paket sedang disiapkan. Silakan hubungi kami lewat halaman Contact untuk penawaran
           khusus.
         </p>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service, index) => (
-            <ServiceCard key={service.id} service={service} index={index} />
-          ))}
-        </div>
+        <ServiceBrowser
+          categories={catalog.categories}
+          services={catalog.services.map((service) => ({
+            id: service.id,
+            slug: service.slug,
+            name: service.name,
+            tagline: service.tagline,
+            price: service.price,
+            features: service.features,
+          }))}
+          serviceIdsByCategory={catalog.serviceIdsByCategory}
+          initialCategory={initialCategory}
+        />
       )}
     </div>
   );

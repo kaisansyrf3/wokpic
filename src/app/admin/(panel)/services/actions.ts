@@ -33,9 +33,45 @@ async function slugTaken(
 
 /** Drops blank rows the repeater may leave behind before validating. */
 function cleanDraft(draft: ServiceDraft): ServiceDraft {
-  return { ...draft, features: draft.features.map((feature) => feature.trim()).filter(Boolean) };
+  return {
+    ...draft,
+    features: draft.features.map((feature) => feature.trim()).filter(Boolean),
+    categorySlugs: draft.categorySlugs.filter(Boolean),
+  };
 }
 
+/** The RPC raises its own Indonesian messages, so those can be shown as they are. */
+function storeError(error: { code: string; message: string }, fallback: string): string {
+  if (error.code === "23505") return "Slug sudah dipakai paket lain.";
+  if (error.code === "P0001") return error.message;
+  return `${fallback}: ${error.message}`;
+}
+
+type SaveArgs = {
+  target_id: string | null;
+  service_slug: string;
+  service_name: string;
+  service_tagline: string | null;
+  service_price: number;
+  service_features: string[];
+  service_is_active: boolean;
+  category_slugs: string[];
+};
+
+function saveArgs(id: string | null, data: ServiceInput): SaveArgs {
+  return {
+    target_id: id,
+    service_slug: data.slug,
+    service_name: data.name,
+    service_tagline: data.tagline ?? null,
+    service_price: data.price,
+    service_features: data.features,
+    service_is_active: data.is_active,
+    category_slugs: data.categorySlugs,
+  };
+}
+
+/** One RPC stores the package and its category links, so nothing saves halfway. */
 export async function createService(draft: ServiceDraft): Promise<ActionResult<{ id: string }>> {
   if (!(await guard())) return SESSION_EXPIRED;
 
@@ -48,38 +84,11 @@ export async function createService(draft: ServiceDraft): Promise<ActionResult<{
     return { ok: false, message: "Slug sudah dipakai paket lain." };
   }
 
-  const { data: last } = await supabase
-    .from("services")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1);
-
-  const { data, error } = await supabase
-    .from("services")
-    .insert({
-      name: parsed.data.name,
-      slug: parsed.data.slug,
-      tagline: parsed.data.tagline ?? null,
-      price: parsed.data.price,
-      features: parsed.data.features,
-      is_active: parsed.data.is_active,
-      sort_order: (last?.[0]?.sort_order ?? -1) + 1,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    return {
-      ok: false,
-      message:
-        error.code === "23505"
-          ? "Slug sudah dipakai paket lain."
-          : `Gagal membuat paket: ${error.message}`,
-    };
-  }
+  const { data, error } = await supabase.rpc("save_service", saveArgs(null, parsed.data));
+  if (error) return { ok: false, message: storeError(error, "Gagal membuat paket") };
 
   revalidateServicePages();
-  return { ok: true, message: "Paket dibuat.", data: { id: data.id } };
+  return { ok: true, message: "Paket dibuat.", data: { id: String(data) } };
 }
 
 export async function updateService(id: string, draft: ServiceDraft): Promise<ActionResult> {
@@ -94,19 +103,8 @@ export async function updateService(id: string, draft: ServiceDraft): Promise<Ac
     return { ok: false, message: "Slug sudah dipakai paket lain." };
   }
 
-  const { error } = await supabase
-    .from("services")
-    .update({
-      name: parsed.data.name,
-      slug: parsed.data.slug,
-      tagline: parsed.data.tagline ?? null,
-      price: parsed.data.price,
-      features: parsed.data.features,
-      is_active: parsed.data.is_active,
-    })
-    .eq("id", id);
-
-  if (error) return { ok: false, message: `Gagal menyimpan: ${error.message}` };
+  const { error } = await supabase.rpc("save_service", saveArgs(id, parsed.data));
+  if (error) return { ok: false, message: storeError(error, "Gagal menyimpan") };
 
   revalidateServicePages();
   return { ok: true, message: "Perubahan tersimpan." };
@@ -127,19 +125,24 @@ export async function deleteService(id: string): Promise<ActionResult> {
   };
 }
 
-export async function reorderServices(serviceIds: unknown): Promise<ActionResult> {
+/** Reorders a package list inside one category only. */
+export async function reorderServices(
+  categorySlug: unknown,
+  serviceIds: unknown,
+): Promise<ActionResult> {
   if (!(await guard())) return SESSION_EXPIRED;
 
-  const parsed = serviceOrderSchema.safeParse({ serviceIds });
+  const parsed = serviceOrderSchema.safeParse({ categorySlug, serviceIds });
   if (!parsed.success) return { ok: false, message: firstIssue(parsed.error) };
 
   const supabase = await createClient();
 
-  const { error } = await supabase.rpc("set_service_order", {
+  const { error } = await supabase.rpc("set_service_category_order", {
+    category_slug: parsed.data.categorySlug,
     service_ids: parsed.data.serviceIds,
   });
 
-  if (error) return { ok: false, message: `Gagal menyimpan urutan: ${error.message}` };
+  if (error) return { ok: false, message: storeError(error, "Gagal menyimpan urutan") };
 
   revalidateServicePages();
   return { ok: true, message: "Urutan paket tersimpan." };

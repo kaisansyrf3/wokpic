@@ -8,9 +8,12 @@ import type {
   HeroItem,
   ProjectDetail,
   RingImage,
+  ServiceCatalog,
+  ServiceCategoryOption,
   ServiceWithFeatures,
 } from "@/types/content";
-import { parseFeatures, parseSocialLinks } from "@/lib/contentParsers";
+import { parseSocialLinks } from "@/lib/contentParsers";
+import { buildFlatServices, buildServiceCatalog, readServiceGraph } from "@/lib/supabase/service-graph";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectImage = Database["public"]["Tables"]["project_images"]["Row"];
@@ -137,21 +140,32 @@ export async function getPublishedSlugs(): Promise<string[]> {
   return (data ?? []).map((row) => row.slug);
 }
 
+/**
+ * Active packages, deduplicated and ordered by category first then by the
+ * package's position inside that category — the `/contact` dropdown.
+ */
 export async function getActiveServices(): Promise<ServiceWithFeatures[]> {
+  const graph = await readServiceGraph(publicClient(), true);
+  return buildFlatServices(graph);
+}
+
+/** Every category with its own ordered list of active packages — `/service`. */
+export async function getServiceCatalog(): Promise<ServiceCatalog> {
+  const graph = await readServiceGraph(publicClient(), true);
+  return buildServiceCatalog(graph);
+}
+
+/** Category names are public so `?category=` can be resolved to a snapshot. */
+export async function getServiceCategoryNames(): Promise<ServiceCategoryOption[]> {
   const supabase = publicClient();
 
   const { data, error } = await supabase
-    .from("services")
-    .select("*")
-    .eq("is_active", true)
+    .from("service_categories")
+    .select("slug, name")
     .order("sort_order", { ascending: true });
 
-  if (error) throw new Error(`Gagal memuat paket: ${error.message}`);
-
-  return (data ?? []).map((service) => ({
-    ...service,
-    features: parseFeatures(service.features),
-  }));
+  if (error) throw new Error(`Gagal memuat kategori: ${error.message}`);
+  return data ?? [];
 }
 
 export async function getAboutContent(): Promise<AboutContent> {

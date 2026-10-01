@@ -1,13 +1,13 @@
 import "server-only";
 
 import type { Database } from "@/types/database";
-import type { AboutContent, ServiceWithFeatures } from "@/types/content";
-import { parseFeatures, parseSocialLinks } from "@/lib/contentParsers";
+import type { AboutContent, AdminServiceRow, ServiceCategoryOption } from "@/types/content";
+import { parseSocialLinks } from "@/lib/contentParsers";
+import { buildAdminServices, readServiceGraph } from "@/lib/supabase/service-graph";
 import { createClient } from "@/lib/supabase/server";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectImage = Database["public"]["Tables"]["project_images"]["Row"];
-type Service = Database["public"]["Tables"]["services"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 const IMAGE_COLUMNS = "id, url, thumb_url, width, height, blur_data_url, is_cover, sort_order";
@@ -240,29 +240,27 @@ export async function markMessageRead(id: string): Promise<void> {
   if (error) throw new Error(`Gagal menandai pesan: ${error.message}`);
 }
 
-function toServiceRow(service: Service): ServiceWithFeatures {
-  return { ...service, features: parseFeatures(service.features) };
+export async function listServicesAdmin(): Promise<AdminServiceRow[]> {
+  const graph = await readServiceGraph(await db(), false);
+  return buildAdminServices(graph);
 }
 
-export async function listServicesAdmin(): Promise<ServiceWithFeatures[]> {
+/** A package for the edit screen, including the categories it belongs to. */
+export async function getServiceForEdit(id: string): Promise<AdminServiceRow | null> {
+  const graph = await readServiceGraph(await db(), false);
+  return buildAdminServices(graph).find((service) => service.id === id) ?? null;
+}
+
+export async function listServiceCategoriesAdmin(): Promise<ServiceCategoryOption[]> {
   const supabase = await db();
 
   const { data, error } = await supabase
-    .from("services")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+    .from("service_categories")
+    .select("slug, name")
+    .order("sort_order", { ascending: true });
 
-  if (error) throw new Error(`Gagal memuat paket: ${error.message}`);
-  return (data ?? []).map(toServiceRow);
-}
-
-export async function getServiceForEdit(id: string): Promise<ServiceWithFeatures | null> {
-  const supabase = await db();
-
-  const { data, error } = await supabase.from("services").select("*").eq("id", id).maybeSingle();
-  if (error) throw new Error(`Gagal memuat paket: ${error.message}`);
-  return data ? toServiceRow(data) : null;
+  if (error) throw new Error(`Gagal memuat kategori: ${error.message}`);
+  return data ?? [];
 }
 
 export async function getSiteSettings(): Promise<AboutContent> {

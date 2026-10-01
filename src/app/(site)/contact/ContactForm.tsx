@@ -7,19 +7,31 @@ import { sendMessage, type ContactFormState } from "@/app/(site)/contact/actions
 export function ContactForm({
   services,
   initialService,
+  initialCategory,
 }: {
   services: { slug: string; name: string }[];
   initialService: string;
+  initialCategory: string;
 }) {
   const INITIAL: ContactFormState = {
     ok: false,
     message: "",
-    values: { name: "", email: "", phone: "", service: initialService, body: "" },
+    values: {
+      name: "",
+      email: "",
+      phone: "",
+      service: initialService,
+      category: initialCategory,
+      body: "",
+    },
   };
   const [state, action, pending] = useActionState(sendMessage, INITIAL);
 
   return (
     <form action={action} className="space-y-6">
+      {/* Which category tab the visitor came from; never shown to them. */}
+      <input type="hidden" name="category" value={state.values.category} readOnly />
+
       <div aria-hidden className="hidden">
         <label>
           Jangan diisi

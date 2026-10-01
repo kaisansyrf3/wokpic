@@ -47,6 +47,12 @@ export const heroSchema = z.object({
   projectIds: z.array(z.string().uuid()).length(8, "Hero harus berisi tepat 8 project."),
 });
 
+export const serviceCategorySlugsSchema = z
+  .array(z.string().trim().min(1, "Kategori tidak valid.").max(40))
+  .min(1, "Pilih minimal satu kategori.")
+  .max(10, "Terlalu banyak kategori.")
+  .transform((slugs) => [...new Set(slugs)]);
+
 export const serviceSchema = z.object({
   name: z.string().trim().min(1, "Nama paket wajib diisi.").max(80, "Nama maksimal 80 karakter."),
   slug: slugSchema,
@@ -60,11 +66,14 @@ export const serviceSchema = z.object({
     .array(z.string().trim().min(1, "Rincian tidak boleh kosong.").max(300, "Rincian terlalu panjang."))
     .max(40, "Maksimal 40 rincian jasa."),
   is_active: z.boolean(),
+  categorySlugs: serviceCategorySlugsSchema,
 });
 
 export type ServiceInput = z.infer<typeof serviceSchema>;
 
+/** A dragged order always belongs to exactly one category. */
 export const serviceOrderSchema = z.object({
+  categorySlug: z.string().trim().min(1, "Kategori tidak dikenal.").max(40),
   serviceIds: z.array(z.string().uuid()).min(1, "Tidak ada paket untuk diurutkan."),
 });
 
@@ -104,6 +113,7 @@ export const contactSchema = z.object({
     .email("Format email tidak valid."),
   phone: z.string().trim().max(30, "Nomor telepon terlalu panjang."),
   service_slug: z.string().trim().max(80),
+  category_slug: z.string().trim().max(80),
   body: z
     .string()
     .trim()
