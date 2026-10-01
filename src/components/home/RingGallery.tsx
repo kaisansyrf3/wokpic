@@ -109,7 +109,6 @@ export function RingGallery({ items }: RingGalleryProps) {
     const store = useTransitionStore.getState();
     if (store.returning && store.delta > 0) {
       proxyRef.current.rot = store.delta;
-      store.setTopIndex(store.selectedIndex ?? 0);
     }
 
     measure();
@@ -189,7 +188,6 @@ export function RingGallery({ items }: RingGalleryProps) {
       tweenRef.current = null;
 
       const store = useTransitionStore.getState();
-      store.setTopIndex(index);
 
       const item = items[index];
       const source = photoRefs.current[index];

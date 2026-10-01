@@ -71,7 +71,7 @@ export function HeroAdmin({
       <header>
         <h1 className="text-xl font-light uppercase tracking-[0.2em]">Hero</h1>
         <p className="mt-1 text-sm text-ash">
-          Delapan project yang melingkari logo di halaman utama. Urutan menentukan posisinya,
+          Delapan project yang melingkari teks ajakan di halaman utama. Urutan menentukan posisinya,
           dimulai dari jam 12 lalu searah jarum jam.
         </p>
       </header>

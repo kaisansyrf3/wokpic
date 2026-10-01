@@ -12,10 +12,6 @@ export function slugify(input: string): string {
     .slice(0, 80);
 }
 
-export function pad3(n: number): string {
-  return String(n).padStart(3, "0");
-}
-
 export function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
