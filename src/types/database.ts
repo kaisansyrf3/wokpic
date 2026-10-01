@@ -263,6 +263,7 @@ export type Database = {
           about_bio: string | null;
           about_photo_url: string | null;
           social_links: Json;
+          whatsapp_number: string | null;
         };
         Insert: {
           id?: number;
@@ -271,6 +272,7 @@ export type Database = {
           about_bio?: string | null;
           about_photo_url?: string | null;
           social_links?: Json;
+          whatsapp_number?: string | null;
         };
         Update: {
           id?: number;
@@ -279,6 +281,7 @@ export type Database = {
           about_bio?: string | null;
           about_photo_url?: string | null;
           social_links?: Json;
+          whatsapp_number?: string | null;
         };
         Relationships: [];
       };

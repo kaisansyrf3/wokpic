@@ -156,9 +156,10 @@ set about_name = 'Nama Fotografer',
     about_role = 'Fotografer Pernikahan',
     about_bio  = 'Saya merekam pernikahan dengan pendekatan dokumenter: tenang, tidak banyak arahan, dan membiarkan momen terjadi apa adanya. Berbasis di Bali, sering bepergian ke seluruh Indonesia.',
     about_photo_url = null,
+    -- Deliberately fake: the real number is entered in /admin/about.
+    whatsapp_number = '6281200000000',
     social_links = '[
-      {"platform":"instagram","url":"https://instagram.com/placeholder"},
-      {"platform":"whatsapp","url":"https://wa.me/6281200000000"}
+      {"platform":"instagram","url":"https://instagram.com/placeholder"}
     ]'::jsonb
 where id = 1;
 

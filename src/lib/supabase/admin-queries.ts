@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Database } from "@/types/database";
 import type { AboutContent, AdminServiceRow, ServiceCategoryOption } from "@/types/content";
-import { parseSocialLinks } from "@/lib/contentParsers";
+import { parseSocialLinks, readWhatsAppNumber } from "@/lib/contentParsers";
 import { buildAdminServices, readServiceGraph } from "@/lib/supabase/service-graph";
 import { createClient } from "@/lib/supabase/server";
 
@@ -165,17 +165,19 @@ export type AdminSummary = {
   heroCount: number;
   services: number;
   unreadMessages: number;
+  whatsappNumber: string | null;
 };
 
 export async function getAdminSummary(): Promise<AdminSummary> {
   const supabase = await db();
 
-  const [projects, published, services, unreadMessages, heroCount] = await Promise.all([
+  const [projects, published, services, unreadMessages, heroCount, settings] = await Promise.all([
     supabase.from("projects").select("id", { count: "exact", head: true }),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("published", true),
     supabase.from("services").select("id", { count: "exact", head: true }),
     supabase.from("messages").select("id", { count: "exact", head: true }).eq("is_read", false),
     supabase.from("hero_items").select("id", { count: "exact", head: true }),
+    supabase.from("site_settings").select("whatsapp_number").eq("id", 1).maybeSingle(),
   ]);
 
   for (const [table, result] of [
@@ -210,6 +212,7 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     heroCount: heroCount.count ?? 0,
     services: services.count ?? 0,
     unreadMessages: unreadMessages.count ?? 0,
+    whatsappNumber: settings.error ? null : readWhatsAppNumber(settings.data?.whatsapp_number),
   };
 }
 
@@ -275,5 +278,6 @@ export async function getSiteSettings(): Promise<AboutContent> {
     bio: data?.about_bio ?? null,
     photoUrl: data?.about_photo_url ?? null,
     socialLinks: parseSocialLinks(data?.social_links),
+    whatsappNumber: data?.whatsapp_number ?? null,
   };
 }

@@ -50,9 +50,12 @@ npm run dev                  # http://localhost:3000
 
 Opsi A (paling mudah, lewat Dashboard Supabase):
   buka **SQL Editor** → paste isi `supabase/migrations/20261001000000_init_schema.sql` → Run,
- lalu ulangi untuk `supabase/migrations/20261001000001_service_categories.sql`.
+ lalu ulangi untuk `supabase/migrations/20261001000001_service_categories.sql` dan
+ `supabase/migrations/20261001000002_whatsapp_number.sql`.
  Migration pertama membuat tabel, policy RLS, bucket `portfolio` & `site`, dan empat RPC admin;
- yang kedua menambahkan kategori paket plus RPC `save_service` dan `set_service_category_order`.
+ yang kedua menambahkan kategori paket plus RPC `save_service` dan `set_service_category_order`;
+ yang ketiga menambahkan kolom `site_settings.whatsapp_number`, memindah nomor WhatsApp lama dari
+ repeater `social_links` ke kolom itu, lalu menghapus baris `whatsapp` dari repeater.
 
 Opsi B (lewat CLI, sekaligus memasang seed demo):
 
@@ -65,7 +68,8 @@ npx supabase db push      # menerapkan migration
 
 `supabase/seed.sql` mengisi 9 project dengan foto placeholder `picsum.photos` 4:3, 8 paket jasa
 yang tersebar di tiga kategori (satu paket muncul di dua kategori), 8 slot hero, dan
-`site_settings`. Kontennya sengaja tempelan — ganti lewat `/admin`.
+`site_settings`. Kontennya sengaja tempelan — ganti lewat `/admin`. Nomor WhatsApp contoh
+`6281200000000` juga palsu: isi nomor asli di **Admin → About → Nomor WhatsApp**.
 
 ### 2. Membuat akun admin
 
@@ -128,21 +132,35 @@ grep -rF "$GMAIL_APP_PASSWORD" .next/static || echo "bersih"
 | --- | --- |
 | `/` | Cincin foto (hero). Tanpa scroll halaman; statik. |
 | `/works/[slug]` | Viewer: satu foto 4:3 besar di tengah (bukan layar-penuh), `‹ ›`, `X` kiri atas, dan tombol `Hubungi Kami` di bawah. |
-| `/service` | Paket aktif dalam tiga tab kategori (`Wedding`, `Pre Wedding`, `Graduation`); ganti tab tanpa reload, URL ikut `?category=<slug>`. |
-| `/about` | Foto, bio, dan tautan media sosial dari `site_settings`. |
+| `/service` | Paket aktif dalam tiga tab kategori (`Wedding`, `Pre Wedding`, `Graduation`); ganti tab tanpa reload, URL ikut `?category=<slug>`. Tombol `PILIH PAKET` membuka WhatsApp pemilik dengan pesan siap kirim yang menyebut paket dan kategori aktif; kalau nomor belum diisi, tombol tetap mengarah ke `/contact?service=…&category=…`. |
+| `/about` | Foto, bio, dan tautan media sosial dari `site_settings`; WhatsApp muncul otomatis dari `whatsapp_number`. |
 | `/contact` | Form pesan (+ preselect paket lewat `?service=<slug>` dan kategori lewat `?category=<slug>`). |
 | `/sitemap.xml`, `/robots.txt` | Di-generate dari database (`src/app/sitemap.ts`, `robots.ts`). |
 
 ## Panel admin
 
 Semua rute `/admin/*` dijaga dua lapis: `src/middleware.ts` menolak non-admin, dan RLS menolak
-tulisan dari role anon. Halaman: dashboard (peringatan hero ≠ 8 / project tanpa cover),
+tulisan dari role anon. Halaman: dashboard (peringatan hero ≠ 8 / project tanpa cover / nomor
+WhatsApp belum diisi),
 `projects` + editor (upload, cover, urutan, publish), `hero` (atur tepat 8 project),
-`services` + editor (paket, fitur, dan kategori), `about` (profil + media sosial), `messages` (kotak masuk).
+`services` + editor (paket, fitur, dan kategori), `about` (profil, nomor WhatsApp, media sosial), `messages` (kotak masuk).
 
 Tulis multi-baris selalu lewat RPC `security definer` agar tidak setengah jadi:
 `set_hero_items`, `set_project_cover`, `set_project_image_order`, `save_service`,
 `set_service_category_order`.
+
+### Nomor WhatsApp
+
+Nomor pemilik disimpan di `site_settings.whatsapp_number` dan diisi di **Admin → About**.
+Kolom itu menerima tulisan bebas (`0812-3456-7890`, `+62 812 3456 7890`, `6281234567890`); server
+action menormalkannya lewat `normalizeWhatsApp()` di `src/lib/whatsapp.ts` menjadi angka berawalan
+`62` dan menolak nomor yang tidak cocok dengan pesan yang menjelaskan formatnya. Setelah disimpan,
+`/service`, `/about`, dan `/` di-revalidate.
+
+WhatsApp **tidak** lagi menjadi salah satu baris repeater `social_links`: link `wa.me/...` dibuat
+otomatis dari kolom tersebut di halaman About dan footer, dan migration
+`20261001000002_whatsapp_number.sql` memindahkan nomor lama ke kolom itu lalu menghapus barisnya.
+Selama nomor kosong, tombol `PILIH PAKET` tetap memakai jalur lama ke form kontak.
 
 ### Kategori paket
 
@@ -213,7 +231,7 @@ src/
     sitemap.ts  robots.ts  layout.tsx  globals.css
   components/   home/ layout/ transition/ viewer/ service/ ui/ admin/
   config/site.ts  nama merek, tagline, URL, logo, tautan navigasi
-  lib/          auth, validation, email, imageJob, format, gsap, viewerFrame, viewport, supabase/
+  lib/          auth, validation, email, whatsapp, social, imageJob, format, gsap, viewerFrame, viewport, supabase/
   middleware.ts penjaga /admin
   store/        mesin fase transisi (Zustand)
   types/        database.ts (hasil `npm run gen:types`) + content.ts
@@ -222,6 +240,7 @@ public/
 supabase/
   migrations/20261001000000_init_schema.sql   tabel, RLS, bucket, RPC
   migrations/20261001000001_service_categories.sql  kategori paket + RPC paket
+  migrations/20261001000002_whatsapp_number.sql  kolom nomor WhatsApp + pindahan dari social_links
   seed.sql                                    konten demo
 ```
 
@@ -232,6 +251,7 @@ supabase/
 | `npm run dev` / `build` / `start` | dev server / build produksi / jalankan hasil build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint (config Next) |
+| `npm run test` | unit test bawaan Node (`node --test "src/**/*.test.ts"`), saat ini `src/lib/whatsapp.test.ts` |
 | `npm run gen:types --project-id=<REF>` | regenerasi `src/types/database.ts` dari Supabase |
 
 ---
@@ -314,6 +334,9 @@ supabase/
     `tabindex`: statis, tidak bisa diklik atau difokuskan, dan memudar bersama cincin. Lebarnya
     dihitung dari geometri (60% ruang kosong di antara tile yang benar-benar segaris dengan teks,
     maksimal 220 px, minimal 88 px) sehingga tidak pernah menutupi foto pada tinggi viewport apa pun.
+17. Nomor WhatsApp hanya satu per situs (`site_settings.whatsapp_number`), tidak per paket, dan
+    seedisinya `6281200000000` — nomor palsu yang jelas-jelas palsu. Tautan `wa.me` selalu dibangun
+    dari kolom itu, jadi tidak ada nomor yang di-hardcode di komponen.
 
 ## Masalah yang sering muncul
 

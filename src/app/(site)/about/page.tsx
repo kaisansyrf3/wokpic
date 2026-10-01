@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { Reveal } from "@/components/ui/Reveal";
 import { siteConfig } from "@/config/site";
+import { withWhatsAppLink } from "@/lib/social";
 import { getAboutContent } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
@@ -18,6 +19,8 @@ export default async function AboutPage() {
   const bio =
     about.bio?.trim() ||
     "Cerita tentang dua orang, direkam dengan cahaya dan kesabaran. Hasilnya adalah arsip yang tenang: wajah keluarga, gesture kecil, dan suasana yang tidak terulang.";
+
+  const socialLinks = withWhatsAppLink(about.socialLinks, about.whatsappNumber);
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-20 md:px-10">
@@ -50,9 +53,9 @@ export default async function AboutPage() {
             {bio}
           </p>
 
-          {about.socialLinks.length > 0 ? (
+          {socialLinks.length > 0 ? (
             <nav data-reveal className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Media sosial">
-              {about.socialLinks.map((link) => (
+              {socialLinks.map((link) => (
                 <a
                   key={`${link.platform}-${link.url}`}
                   href={link.url}

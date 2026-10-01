@@ -10,9 +10,10 @@ function firstIssue(error: { issues: Array<{ message: string }> }): string {
   return error.issues[0]?.message ?? "Data tidak valid.";
 }
 
-/** The footer carries the social links, so the landing page must refresh too. */
+/** The footer carries the social links and every service button can be a WhatsApp link. */
 function revalidateAboutPages() {
   revalidatePath("/about");
+  revalidatePath("/service");
   revalidatePath("/");
 }
 
@@ -49,6 +50,7 @@ export async function saveAbout(draft: AboutInput): Promise<ActionResult> {
       about_bio: parsed.data.about_bio ?? null,
       about_photo_url: parsed.data.about_photo_url ?? null,
       social_links: parsed.data.social_links,
+      whatsapp_number: parsed.data.whatsapp_number,
     })
     .eq("id", 1);
 

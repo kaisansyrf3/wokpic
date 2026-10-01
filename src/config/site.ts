@@ -20,13 +20,8 @@ export const navLinks = [
   { label: "ABOUT", href: "/about" },
 ] as const;
 
-export const socialPlatforms = [
-  "instagram",
-  "whatsapp",
-  "tiktok",
-  "youtube",
-  "facebook",
-] as const;
+/** WhatsApp has its own setting (`site_settings.whatsapp_number`), so it is not a repeater row. */
+export const socialPlatforms = ["instagram", "tiktok", "youtube", "facebook"] as const;
 
 export type SocialPlatform = (typeof socialPlatforms)[number];
 

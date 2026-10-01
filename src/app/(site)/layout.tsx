@@ -1,9 +1,12 @@
 import { SiteChrome } from "@/components/layout/SiteChrome";
+import { getFooterLinks } from "@/lib/supabase/queries";
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <SiteChrome>{children}</SiteChrome>;
+  const footerLinks = await getFooterLinks();
+
+  return <SiteChrome footerLinks={footerLinks}>{children}</SiteChrome>;
 }

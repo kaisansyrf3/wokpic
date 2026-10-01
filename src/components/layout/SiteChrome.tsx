@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import type { FooterLinks } from "@/types/content";
 
 type SiteChromeProps = {
   children: React.ReactNode;
+  footerLinks: FooterLinks;
 };
 
-export function SiteChrome({ children }: SiteChromeProps) {
+export function SiteChrome({ children, footerLinks }: SiteChromeProps) {
   const pathname = usePathname();
   const isLanding = pathname === "/";
 
@@ -23,7 +25,7 @@ export function SiteChrome({ children }: SiteChromeProps) {
       <main className={isLanding ? "relative h-full" : "relative flex-1 pt-20 md:pt-24"}>
         {children}
       </main>
-      {!isLanding ? <Footer /> : null}
+      {!isLanding ? <Footer footerLinks={footerLinks} /> : null}
     </div>
   );
 

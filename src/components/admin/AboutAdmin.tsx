@@ -10,6 +10,7 @@ import { deleteAboutPhoto, saveAbout } from "@/app/admin/(panel)/about/actions";
 import { socialPlatforms, type SocialPlatform } from "@/config/site";
 import { prepareImage } from "@/lib/imageJob";
 import { createClient } from "@/lib/supabase/client";
+import { normalizeWhatsApp } from "@/lib/whatsapp";
 
 const ACCEPTED = /^image\/(jpeg|png|webp|avif)$/;
 
@@ -21,6 +22,7 @@ type About = {
   bio: string | null;
   photoUrl: string | null;
   socialLinks: { platform: string; url: string }[];
+  whatsappNumber: string | null;
 };
 
 function toRows(links: About["socialLinks"]): SocialRow[] {
@@ -43,10 +45,13 @@ export function AboutAdmin({ about }: { about: About }) {
   const [role, setRole] = useState(about.role ?? "");
   const [bio, setBio] = useState(about.bio ?? "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(about.photoUrl);
+  const [whatsapp, setWhatsapp] = useState(about.whatsappNumber ?? "");
   const [rows, setRows] = useState<SocialRow[]>(() => toRows(about.socialLinks));
   const [pending, setPending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const normalizedWhatsapp = normalizeWhatsApp(whatsapp);
 
   const uploadPhoto = async (file: File) => {
     if (!ACCEPTED.test(file.type)) {
@@ -111,6 +116,7 @@ export function AboutAdmin({ about }: { about: About }) {
         about_bio: bio.trim() || null,
         about_photo_url: photoUrl,
         social_links: rows.map((row) => ({ platform: row.platform, url: row.url.trim() })),
+        whatsapp_number: whatsapp.trim(),
       }),
     );
     setPending(false);
@@ -170,6 +176,48 @@ export function AboutAdmin({ about }: { about: About }) {
             placeholder="Dua sampai tiga kalimat tentang cara Anda bekerja."
           />
         </label>
+
+        <div className="space-y-1.5 border-t border-line pt-4">
+          <label className="block space-y-1.5">
+            <span className="ui-label text-ash">Nomor WhatsApp</span>
+            <input
+              value={whatsapp}
+              onChange={(event) => setWhatsapp(event.target.value)}
+              className="admin-input"
+              inputMode="tel"
+              placeholder="0812-3456-7890"
+              aria-describedby="whatsapp-help"
+            />
+          </label>
+
+          <p id="whatsapp-help" className="text-xs text-ash">
+            Dipakai untuk tombol PILIH PAKET di halaman Layanan. Boleh ditulis bebas:
+            0812-3456-7890, +62 812 3456 7890, atau 6281234567890; disimpan sebagai angka berawalan 62.
+          </p>
+
+          {whatsapp.trim() === "" ? (
+            <p className="text-xs text-amber-200">
+              Belum diisi. Tombol PILIH PAKET masih mengarah ke halaman Kontak.
+            </p>
+          ) : normalizedWhatsapp ? (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ash">
+              <code className="text-chalk">wa.me/{normalizedWhatsapp}</code>
+              <a
+                href={`https://wa.me/${normalizedWhatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ui-label border border-line px-3 py-1.5 text-chalk transition-colors hover:border-chalk"
+              >
+                Tes tautan
+              </a>
+            </p>
+          ) : (
+            <p className="text-xs text-red-300">
+              Nomor itu tidak dikenali sebagai nomor Indonesia. Simpan akan ditolak sampai formatnya
+              benar.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="admin-card space-y-4 p-5">
@@ -299,8 +347,8 @@ export function AboutAdmin({ about }: { about: About }) {
         )}
 
         <p className="text-xs text-ash">
-          WhatsApp boleh memakai tautan <code>https://wa.me/628123456789</code>. URL wajib lengkap
-          dengan <code>https://</code>.
+          WhatsApp tidak ada di daftar ini: nomor dikelola sendiri di atas dan tautannya dibuat
+          otomatis. URL wajib lengkap dengan <code>https://</code>.
         </p>
       </section>
 

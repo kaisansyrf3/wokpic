@@ -23,6 +23,14 @@ export default async function AdminDashboardPage() {
     });
   }
 
+  if (!summary.whatsappNumber) {
+    warnings.push({
+      text: "Nomor WhatsApp belum diisi, tombol PILIH PAKET masih mengarah ke halaman Kontak.",
+      href: "/admin/about",
+      cta: "Isi nomor",
+    });
+  }
+
   const stats = [
     { label: "Project", value: summary.projects, href: "/admin/projects" },
     { label: "Tayang", value: summary.published, href: "/admin/projects" },

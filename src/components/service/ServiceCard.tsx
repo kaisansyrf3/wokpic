@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { formatRupiah } from "@/lib/format";
 import { pad2 } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { siteConfig } from "@/config/site";
 
 export type ServiceCardData = {
   id: string;
@@ -16,12 +18,27 @@ export function ServiceCard({
   service,
   index,
   categorySlug,
+  categoryName,
+  whatsappNumber,
 }: {
   service: ServiceCardData;
   index: number;
   categorySlug: string;
+  categoryName: string;
+  /** Normalised owner number; without it the button keeps going to the contact form. */
+  whatsappNumber: string | null;
 }) {
-  const href = `/contact?service=${encodeURIComponent(service.slug)}&category=${encodeURIComponent(categorySlug)}`;
+  const contactHref = `/contact?service=${encodeURIComponent(service.slug)}&category=${encodeURIComponent(categorySlug)}`;
+
+  const action = whatsappNumber
+    ? {
+        href: buildWhatsAppUrl(whatsappNumber, siteConfig.name, service.name, categoryName),
+        external: true,
+      }
+    : { href: contactHref, external: false };
+
+  const actionClass =
+    "ui-label mt-6 inline-flex items-center justify-between border border-line px-4 py-3 text-center uppercase tracking-widest transition-colors hover:border-chalk hover:text-chalk";
 
   return (
     <article
@@ -50,13 +67,23 @@ export function ServiceCard({
         </ul>
       ) : null}
 
-      <Link
-        href={href}
-        className="ui-label mt-6 inline-flex items-center justify-between border border-line px-4 py-3 text-center uppercase tracking-widest transition-colors hover:border-chalk hover:text-chalk"
-      >
-        Pilih paket
-        <span aria-hidden>&rarr;</span>
-      </Link>
+      {action.external ? (
+        <a
+          href={action.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Pilih paket ${service.name} lewat WhatsApp`}
+          className={actionClass}
+        >
+          Pilih paket
+          <span aria-hidden>&rarr;</span>
+        </a>
+      ) : (
+        <Link href={action.href} className={actionClass}>
+          Pilih paket
+          <span aria-hidden>&rarr;</span>
+        </Link>
+      )}
     </article>
   );
 }

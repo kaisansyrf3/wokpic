@@ -14,6 +14,7 @@ type ServiceBrowserProps = {
   services: ServiceCardData[];
   serviceIdsByCategory: Record<string, string[]>;
   initialCategory: string;
+  whatsappNumber: string | null;
 };
 
 /**
@@ -25,6 +26,7 @@ export function ServiceBrowser({
   services,
   serviceIdsByCategory,
   initialCategory,
+  whatsappNumber,
 }: ServiceBrowserProps) {
   const [active, setActive] = useState(initialCategory);
   const [shown, setShown] = useState(initialCategory);
@@ -157,7 +159,14 @@ export function ServiceBrowser({
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {listed.map((service, index) => (
-              <ServiceCard key={service.id} service={service} index={index} categorySlug={shown} />
+              <ServiceCard
+                key={service.id}
+                service={service}
+                index={index}
+                categorySlug={shown}
+                categoryName={shownName}
+                whatsappNumber={whatsappNumber}
+              />
             ))}
           </div>
         )}

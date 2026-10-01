@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 
 import { Reveal } from "@/components/ui/Reveal";
 import { ServiceBrowser } from "@/components/service/ServiceBrowser";
-import { getServiceCatalog } from "@/lib/supabase/queries";
+import { getServiceCatalog, getWhatsAppNumber } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: "Layanan",
   description:
-    "Paket fotografi pernikahan, prewedding, dan graduation: cakupan, rincian jasa, dan harga mulai. Pilih paket lalu lanjut ke formulir kontak.",
+    "Paket fotografi pernikahan, prewedding, dan graduation: cakupan, rincian jasa, dan harga mulai. Pilih paket lalu lanjut ke WhatsApp.",
 };
 
 export default async function ServicePage({
@@ -15,7 +15,11 @@ export default async function ServicePage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  const [{ category }, catalog] = await Promise.all([searchParams, getServiceCatalog()]);
+  const [{ category }, catalog, whatsappNumber] = await Promise.all([
+    searchParams,
+    getServiceCatalog(),
+    getWhatsAppNumber(),
+  ]);
 
   // An unknown ?category= falls back to the first tab rather than erroring.
   const requested = catalog.categories.find((entry) => entry.slug === category);
@@ -54,6 +58,7 @@ export default async function ServicePage({
           }))}
           serviceIdsByCategory={catalog.serviceIdsByCategory}
           initialCategory={initialCategory}
+          whatsappNumber={whatsappNumber}
         />
       )}
     </div>

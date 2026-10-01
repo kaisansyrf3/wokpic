@@ -63,4 +63,11 @@ export type AboutContent = {
   bio: string | null;
   photoUrl: string | null;
   socialLinks: SocialLink[];
+  whatsappNumber: string | null;
+};
+
+/** Sites the footer links to; WhatsApp is built from its own column, not a row. */
+export type FooterLinks = {
+  socialLinks: SocialLink[];
+  whatsappNumber: string | null;
 };

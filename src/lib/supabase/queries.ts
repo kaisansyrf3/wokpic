@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type {
   AboutContent,
+  FooterLinks,
   HeroItem,
   ProjectDetail,
   RingImage,
@@ -12,7 +13,7 @@ import type {
   ServiceCategoryOption,
   ServiceWithFeatures,
 } from "@/types/content";
-import { parseSocialLinks } from "@/lib/contentParsers";
+import { parseSocialLinks, readWhatsAppNumber } from "@/lib/contentParsers";
 import { buildFlatServices, buildServiceCatalog, readServiceGraph } from "@/lib/supabase/service-graph";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
@@ -187,5 +188,44 @@ export async function getAboutContent(): Promise<AboutContent> {
     bio: settings?.about_bio ?? null,
     photoUrl: settings?.about_photo_url ?? null,
     socialLinks: parseSocialLinks(settings?.social_links),
+    whatsappNumber: readWhatsAppNumber(settings?.whatsapp_number),
+  };
+}
+
+/**
+ * `/service` only needs the number, and a stored value that no longer parses is
+ * treated as missing so the package buttons fall back to the contact form.
+ * A failed read counts as missing too: the whole site must not go down over one
+ * optional column (e.g. before `20261001000002_whatsapp_number.sql` is applied).
+ */
+export async function getWhatsAppNumber(): Promise<string | null> {
+  const supabase = publicClient();
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("whatsapp_number")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) return null;
+
+  return readWhatsAppNumber(data?.whatsapp_number);
+}
+
+/** Footer links: the repeater rows plus the WhatsApp number, which has its own column. */
+export async function getFooterLinks(): Promise<FooterLinks> {
+  const supabase = publicClient();
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("social_links, whatsapp_number")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) return { socialLinks: [], whatsappNumber: null };
+
+  return {
+    socialLinks: parseSocialLinks(data?.social_links),
+    whatsappNumber: readWhatsAppNumber(data?.whatsapp_number),
   };
 }

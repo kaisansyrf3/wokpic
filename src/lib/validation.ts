@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { socialPlatforms } from "@/config/site";
+import { normalizeWhatsApp } from "@/lib/whatsapp";
 
 const slugSchema = z
   .string()
@@ -81,10 +82,22 @@ const socialPlatformSchema = z.enum(socialPlatforms, {
   error: "Platform media sosial tidak dikenal.",
 });
 
+/** Any Indonesian format is accepted; only the normalised digits are stored. */
+const whatsappNumberSchema = z
+  .string()
+  .trim()
+  .max(30, "Nomor WhatsApp terlalu panjang.")
+  .optional()
+  .refine((value) => !value || normalizeWhatsApp(value) !== null, {
+    message: "Nomor WhatsApp tidak valid. Contoh: 0812-3456-7890 atau +62 812 3456 7890.",
+  })
+  .transform((value) => (value ? normalizeWhatsApp(value) : null));
+
 export const aboutSchema = z.object({
   about_name: z.string().trim().max(80, "Nama maksimal 80 karakter.").nullable().optional(),
   about_role: z.string().trim().max(80, "Peran maksimal 80 karakter.").nullable().optional(),
   about_bio: z.string().trim().max(4000, "Bio maksimal 4000 karakter.").nullable().optional(),
+  whatsapp_number: whatsappNumberSchema,
   about_photo_url: z
     .string()
     .trim()
